@@ -3,7 +3,7 @@
 - [x] Add Vite app scaffold files | AC: `vite.config.ts` exists, root `index.html` exists, `index.html` loads `/src/index.tsx`
 - [x] Convert CRA HTML placeholders to Vite paths | AC: `index.html` contains no `%PUBLIC_URL%`, favicon/apple-touch/manifest links point to public-root paths, `public/index.html` is removed
 - [x] Replace CRA env usage | AC: source code contains no `process.env`, dev checks use `import.meta.env.DEV`
-- [ ] Replace CRA type reference | AC: `src/react-app-env.d.ts` is removed or renamed to Vite-compatible env typing, source typecheck does not depend on `react-scripts`
+- [x] Replace CRA type reference | AC: `src/react-app-env.d.ts` is removed or renamed to Vite-compatible env typing, source typecheck does not depend on `react-scripts`
 - [ ] Update package scripts for pnpm/Vite | AC: scripts include `dev`, `build`, `typecheck`, `test`, no scripts call `craco`, `react-scripts`, `yarn`, or Firebase emulators
 - [ ] Add pnpm package manager metadata | AC: `package.json` has `packageManager: pnpm@11.1.2`, `pnpm-lock.yaml` exists, `yarn.lock` is removed
 - [ ] Remove CRA/Craco runtime dependencies | AC: package dependencies no longer include `react-scripts`, `@craco/craco`, `worker-plugin`, or `worker-loader`
