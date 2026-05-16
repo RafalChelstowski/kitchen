@@ -55,3 +55,18 @@ test('persists achievements and preferences without transient state', () => {
   expect(persisted.state).not.toHaveProperty('playerStatus');
   expect(persisted.state).not.toHaveProperty('isLocked');
 });
+
+test('marks achievement viewed while preserving original date', () => {
+  const achievement = {
+    date: '2026-05-16T00:00:00.000Z',
+    status: AchievementPayloadStatus.NEW,
+  };
+
+  getState().setAchievement(AchievementName.FRIDGE, achievement);
+  getState().markAchievementViewed(AchievementName.FRIDGE);
+
+  expect(getState().achievements[AchievementName.FRIDGE]).toEqual({
+    date: achievement.date,
+    status: AchievementPayloadStatus.VIEWED,
+  });
+});
