@@ -26,7 +26,7 @@
 - [x] Exclude transient state from persistence | AC: persistence partialization excludes coffeeState, letters, playerStatus, and isLocked
 - [x] Add achievement viewed action | AC: store exposes an action that changes one achievement status to `VIEWED`, action preserves original date
 - [x] Convert achievement unlocking to local-only | AC: `useAchievement` no longer reads auth/user/mutation state, duplicate unlocks return without mutation, new unlocks update Zustand and show success toast
-- [ ] Simplify achievements player list | AC: Achievements page reads descriptions from local catalog, player achievements render without Firebase data, collected count denominator is 9
+- [x] Simplify achievements player list | AC: Achievements page reads descriptions from local catalog, player achievements render without Firebase data, collected count denominator is 9
 - [ ] Remove global achievements mode | AC: global leaderboard component/path is removed, Achievements page has no local/global toggle, no code reads all users
 - [ ] Make viewed status local | AC: hovering or viewing a NEW achievement marks it `VIEWED` through Zustand only, no query refetch or remote update remains
 - [ ] Remove auth-dependent nav states | AC: Nav no longer imports `useUser` or `userApi`, nav links are limited to Home, Settings, and Achievements

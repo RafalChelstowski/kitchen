@@ -7,17 +7,18 @@ import { useStore } from '../../store/store';
 import {
   AchievementDescriptions,
   AchievementName,
-  AchievementPayload,
   AchievementPayloadStatus,
   Achievements as AchievementsType,
 } from '../../types';
+import { achievementCatalog } from './achievementCatalog';
 
 const cellClassName = 'p-6';
+const achievementTotal = 9;
 
 type AchievementMode = 'player' | 'global';
 
 interface PlayerAchievementsProps {
-  achievements: Partial<Record<AchievementName, AchievementPayload>>;
+  achievements: AchievementsType;
   achievementsDescriptions: AchievementDescriptions;
 }
 
@@ -25,8 +26,6 @@ export function PlayerAchievements({
   achievements,
   achievementsDescriptions,
 }: PlayerAchievementsProps): JSX.Element {
-  const { uid } = useUser();
-
   return (
     <>
       {Object.entries(achievements).map(([k], i) => {
@@ -43,7 +42,7 @@ export function PlayerAchievements({
           <div
             key={k}
             className={`flex flex-row font-semibold text-lg transition-colors duration-1000 ${
-              isNew && uid ? 'text-tGreen' : 'text-white'
+              isNew ? 'text-tGreen' : 'text-white'
             }`}
           >
             <div className={`w-1/6 ${cellClassName}`}>{`${i + 1}.`}</div>
@@ -70,15 +69,7 @@ export function Achievements(): JSX.Element {
   const [achievementsView, setAchievementsView] =
     useState<AchievementMode>('player');
 
-  const achievementsDescriptions = Object.fromEntries(
-    Object.keys(achievements).map((name) => [
-      name,
-      {
-        fullName: name,
-        description: '',
-      },
-    ])
-  ) as AchievementDescriptions;
+  const achievementsDescriptions = achievementCatalog;
   const isFetching = false;
 
   if (!achievementsDescriptions || noAchievements || isFetching) {
@@ -98,7 +89,7 @@ export function Achievements(): JSX.Element {
               ? 'Loading...'
               : `Achievements collected: ${
                   Object.entries(achievements).length
-                }/${Object.entries(achievementsDescriptions).length}`}
+                }/${achievementTotal}`}
           </div>
         </div>
         <div className="flex w-1/2 place-items-center">
