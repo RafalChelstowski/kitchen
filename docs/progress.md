@@ -36,7 +36,7 @@
 - [x] Remove React Query dependency | AC: `react-query` is absent from `package.json`, no source import references `react-query`
 - [x] Remove Firebase-related dev dependencies | AC: `cypress-firebase`, `firebase-admin`, and unused Cypress Firebase tooling are absent from `package.json`
 - [x] Replace Jest with Vitest config | AC: Vitest config exists, `jest.config.js` is removed, test script runs Vitest
-- [ ] Make test setup Vitest-compatible | AC: `src/setupTests.ts` imports jest-dom through Vitest-compatible setup, TypeScript recognizes test globals
+- [x] Make test setup Vitest-compatible | AC: `src/setupTests.ts` imports jest-dom through Vitest-compatible setup, TypeScript recognizes test globals
 - [ ] Fix existing app smoke test | AC: `src/App.test.tsx` runs under Vitest/RTL, test does not depend on Firebase or React Query providers
 - [ ] Add store persistence unit test | AC: test verifies persisted partial state includes achievements/preferences and excludes transient state
 - [ ] Add achievement unlock unit test | AC: test verifies first unlock adds payload with NEW, second unlock for same achievement does not overwrite existing payload
@@ -55,3 +55,4 @@
 - 2026-05-16: Firebase app/auth/database/analytics modules were deleted; the remaining auth/query hooks now use temporary local no-op shims until later checklist items remove those surfaces.
 - 2026-05-16: Original achievement copy is still readable from the public Realtime Database at `https://kitchen-5f4db-default-rtdb.europe-west1.firebasedatabase.app/achievementDescriptions.json`.
 - 2026-05-16: `pnpm test` now starts `vitest --run`; the existing `src/App.test.tsx` suite fails during collection because Vite cannot resolve `@react-three/cannon` from `src/App.tsx`, which is left for the app smoke-test task.
+- 2026-05-16: `pnpm typecheck` currently stops in `vite.config.ts` because TypeScript node resolution cannot resolve the Vite 8 and Tailwind Vite package exports under the current config.
