@@ -38,7 +38,7 @@
 - [x] Replace Jest with Vitest config | AC: Vitest config exists, `jest.config.js` is removed, test script runs Vitest
 - [x] Make test setup Vitest-compatible | AC: `src/setupTests.ts` imports jest-dom through Vitest-compatible setup, TypeScript recognizes test globals
 - [x] Fix existing app smoke test | AC: `src/App.test.tsx` runs under Vitest/RTL, test does not depend on Firebase or React Query providers
-- [ ] Add store persistence unit test | AC: test verifies persisted partial state includes achievements/preferences and excludes transient state
+- [x] Add store persistence unit test | AC: test verifies persisted partial state includes achievements/preferences and excludes transient state
 - [ ] Add achievement unlock unit test | AC: test verifies first unlock adds payload with NEW, second unlock for same achievement does not overwrite existing payload
 - [ ] Add achievement viewed unit test | AC: test verifies marking viewed changes status to VIEWED and keeps the original date
 - [ ] Final dependency cleanup | AC: `package.json` contains no unused modernization leftovers identified by source search, removed packages have no remaining imports
