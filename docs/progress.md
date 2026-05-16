@@ -12,7 +12,7 @@
 - [x] Install Tailwind 4 Vite integration | AC: package dependencies include `tailwindcss@4.3.0` and `@tailwindcss/vite@4.3.0`, old `@tailwindcss/postcss7-compat` alias is gone
 - [x] Wire Tailwind through Vite | AC: `vite.config.ts` uses the Tailwind Vite plugin, `craco.config.js` no longer exists, `pnpm build` compiles CSS
 - [x] Preserve existing Tailwind app styles | AC: `src/index.css` still defines existing base/components styles, rendered class names used by Nav/Menu/Settings/Achievements remain present in source
-- [ ] Remove React Query bootstrap | AC: `src/index.tsx` no longer imports `react-query`, `QueryClientProvider`, or `ReactQueryDevtools`, app renders without provider wrapping
+- [x] Remove React Query bootstrap | AC: `src/index.tsx` no longer imports `react-query`, `QueryClientProvider`, or `ReactQueryDevtools`, app renders without provider wrapping
 - [ ] Remove React Query context bridge | AC: `src/App.tsx` no longer checks `window.ReactQueryClientContext`, no `useContextBridge` import remains
 - [ ] Delete Firebase config files | AC: `firebase.json` is removed, package scripts no longer reference Firebase emulators, package dependencies no longer include `firebase` or `firebase-admin`
 - [ ] Delete Firebase API modules | AC: Firebase app/auth/database/analytics files are removed or empty-unused, no source imports from `src/api/firebase`, `src/api/database`, `src/api/user`, or `src/api/analytics`
@@ -51,3 +51,4 @@
 (critical discoveries only)
 - 2026-05-16: `pnpm` is not on PATH; `COREPACK_HOME=/tmp/corepack-cache HOME=/tmp PNPM_HOME=/tmp/pnpm-home npm_config_store_dir=/tmp/pnpm-store corepack pnpm typecheck` reaches install but pnpm 11 blocks on ignored dependency build scripts. Direct `./node_modules/.bin/tsc --noEmit` currently fails on pre-existing `src/api/database.ts` generic `Object` typing and `src/types/common/navigator.ts` XR interface mismatch.
 - 2026-05-16: `pnpm approve-builds --all` created `pnpm-workspace.yaml` with build-script approvals for `@firebase/util`, `core-js`, `cypress`, and `protobufjs`; after that, `COREPACK_HOME=/tmp/corepack-cache HOME=/tmp PNPM_HOME=/tmp/pnpm-home npm_config_store_dir=/tmp/pnpm-store corepack pnpm build` runs Vite successfully.
+- 2026-05-16: `src/index.tsx` now renders `<App />` directly and installs only a temporary plain React context on `window.ReactQueryClientContext`; the next context bridge task can remove that handoff from `App.tsx`.
