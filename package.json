@@ -93,7 +93,8 @@
     "firebase-admin": "^9.6.0",
     "postcss": "^7",
     "tailwindcss": "4.3.0",
-    "ts-jest": "^27.1.4"
+    "ts-jest": "^27.1.4",
+    "vite": "8.0.13"
   },
   "resolutions": {
     "//": "See https://github.com/facebook/create-react-app/issues/11773",
