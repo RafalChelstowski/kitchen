@@ -9,7 +9,6 @@
     "@react-three/drei": "^9.11.3",
     "@react-three/fiber": "^8.0.19",
     "@testing-library/react": "^13.0.0",
-    "@testing-library/user-event": "^14.0.4",
     "@typescript-eslint/eslint-plugin": "^4.20.0",
     "@typescript-eslint/parser": "^4.20.0",
     "easystarjs": "^0.4.4",
@@ -33,11 +32,9 @@
     "prettier": "^2.6.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
-    "react-hooks-worker": "^1.0.4",
     "react-toastify": "^8.2.0",
     "react-transition-group": "^4.4.2",
     "react-use": "^17.1.0",
-    "source-map-explorer": "^2.5.2",
     "three": "^0.141.0",
     "typescript": "^4.7.2",
     "wouter": "^2.7.4",
@@ -48,12 +45,6 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest --run"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [
@@ -68,13 +59,8 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-transform-runtime": "^7.13.10",
-    "@babel/preset-typescript": "^7.13.0",
     "@tailwindcss/vite": "4.3.0",
-    "@testing-library/cypress": "^8.0.0",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react-hooks": "^7.0.2",
-    "@types/jest": "^27.0.0",
     "@types/lodash": "^4.14.182",
     "@types/node": "^17.0.36",
     "@types/pathfinding": "^0.0.5",
@@ -82,20 +68,9 @@
     "@types/react-dom": "^18.0.5",
     "@types/react-transition-group": "^4.4.3",
     "@types/three": "^0.140.0",
-    "autoprefixer": "^9",
-    "clsx": "^1.1.1",
-    "concurrently": "^6.0.2",
-    "cypress": "^9.5.3",
-    "eslint-plugin-jest": "^24.4.2",
     "jsdom": "^29.1.1",
-    "postcss": "^7",
     "tailwindcss": "4.3.0",
-    "ts-jest": "^27.1.4",
     "vite": "8.0.13",
     "vitest": "^4.1.6"
-  },
-  "resolutions": {
-    "//": "See https://github.com/facebook/create-react-app/issues/11773",
-    "react-error-overlay": "6.0.9"
   }
 }
