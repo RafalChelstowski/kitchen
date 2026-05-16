@@ -6,7 +6,7 @@
 - [x] Replace CRA type reference | AC: `src/react-app-env.d.ts` is removed or renamed to Vite-compatible env typing, source typecheck does not depend on `react-scripts`
 - [x] Update package scripts for pnpm/Vite | AC: scripts include `dev`, `build`, `typecheck`, `test`, no scripts call `craco`, `react-scripts`, `yarn`, or Firebase emulators
 - [x] Add pnpm package manager metadata | AC: `package.json` has `packageManager: pnpm@11.1.2`, `pnpm-lock.yaml` exists, `yarn.lock` is removed
-- [ ] Remove CRA/Craco runtime dependencies | AC: package dependencies no longer include `react-scripts`, `@craco/craco`, `worker-plugin`, or `worker-loader`
+- [x] Remove CRA/Craco runtime dependencies | AC: package dependencies no longer include `react-scripts`, `@craco/craco`, `worker-plugin`, or `worker-loader`
 - [ ] Remove unused worker placeholder | AC: `src/raycast.worker.ts` is removed if unused, no source import references `react-hooks-worker`
 - [ ] Remove obsolete web-vitals reporting | AC: `src/reportWebVitals.ts` is removed, `web-vitals` is removed from dependencies, no source imports `reportWebVitals`
 - [ ] Install Tailwind 4 Vite integration | AC: package dependencies include `tailwindcss@4.3.0` and `@tailwindcss/vite@4.3.0`, old `@tailwindcss/postcss7-compat` alias is gone
