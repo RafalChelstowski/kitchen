@@ -10,20 +10,20 @@ export const achievementCatalog: AchievementDescriptions = {
     description: 'harnas',
   },
   [AchievementName.AT]: {
-    fullName: 'at',
-    description: 'at',
+    fullName: 'Letter T',
+    description: 'Ultra rare piece 1/4',
   },
   [AchievementName.BO]: {
-    fullName: 'bo',
-    description: 'bo',
+    fullName: 'Letter O',
+    description: 'Ultra rare piece 2/4',
   },
   [AchievementName.CU]: {
-    fullName: 'cu',
-    description: 'cu',
+    fullName: 'Letter U',
+    description: 'Ultra rare piece 3/4',
   },
   [AchievementName.DK]: {
-    fullName: 'dk',
-    description: 'dk',
+    fullName: 'Letter K',
+    description: 'Ultra rare piece 4/4',
   },
   [AchievementName.NEON]: {
     fullName: 'neon',

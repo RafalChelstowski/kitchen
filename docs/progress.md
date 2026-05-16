@@ -19,7 +19,7 @@
 - [x] Delete React Query API hooks | AC: `useSnapshot`, `useSet`, `useUpdate`, `useRemove`, and `useRealtimeQuery` are removed or unused, no source imports them
 - [x] Add local achievement catalog module | AC: catalog contains exactly 9 entries keyed by `AchievementName`, each entry has `fullName` and `description`, catalog contains no player dates
 - [x] Add Fridge achievement catalog entry | AC: `FRIDGE` maps to `Fridge door`, description is `If you don't like what you've found inside - maybe throw it outside?`
-- [ ] Add letter achievement catalog entries | AC: `AT`, `BO`, `CU`, and `DK` map to `Letter T/O/U/K`, descriptions are `Ultra rare piece 1/4` through `Ultra rare piece 4/4`
+- [x] Add letter achievement catalog entries | AC: `AT`, `BO`, `CU`, and `DK` map to `Letter T/O/U/K`, descriptions are `Ultra rare piece 1/4` through `Ultra rare piece 4/4`
 - [ ] Add remaining achievement catalog entries | AC: `COFFEE`, `WINDOW`, `NEON`, and `HARNAS` have the agreed full names and descriptions
 - [ ] Upgrade Zustand store API | AC: store imports use current Zustand API shape, TypeScript accepts store creation, existing selectors compile
 - [ ] Add Zustand persistence middleware | AC: store uses `persist`, storage key is stable, persisted state includes achievements, gfxSettings, and pointerSpeed
