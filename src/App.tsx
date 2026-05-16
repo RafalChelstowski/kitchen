@@ -35,7 +35,7 @@ import { Player } from './features/player/Player';
 import { UserMenus } from './features/user/UserMenus';
 
 function DevDebug({ children }: { children: ReactNode }): JSX.Element {
-  const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+  const isDev = import.meta.env.DEV;
 
   return isDev ? (
     <Debug color="black" scale={1.01}>

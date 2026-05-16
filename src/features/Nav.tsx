@@ -25,7 +25,7 @@ export const routes = {
 };
 
 export function Nav(): JSX.Element | null {
-  const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+  const isDev = import.meta.env.DEV;
   const { uid } = useUser();
   const [location] = useLocation();
 

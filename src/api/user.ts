@@ -8,8 +8,8 @@ if (window.location.hostname === 'localhost') {
 }
 
 const signInTestUser = (): Promise<UserCredential> => {
-  const email = <string>process.env.REACT_APP_TEST_EMAIL;
-  const password = <string>process.env.REACT_APP_TEST_PASSWORD;
+  const email = import.meta.env.VITE_TEST_EMAIL;
+  const password = import.meta.env.VITE_TEST_PASSWORD;
 
   return auth.signInWithEmailAndPassword(email, password);
 };

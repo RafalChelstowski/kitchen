@@ -3,14 +3,14 @@ import firebase from 'firebase/app';
 require('firebase/auth');
 require('firebase/database');
 
-const apiKey = process.env.REACT_APP_API_KEY;
-const authDomain = process.env.REACT_APP_AUTH_DOMAIN;
-const databaseURL = process.env.REACT_APP_DATABASE_URL;
-const projectId = process.env.REACT_APP_PROJECT_ID;
-const storageBucket = process.env.REACT_APP_STORAGE_BUCKET;
-const messagingSenderId = process.env.REACT_APP_MESSAGING_SENDER_ID;
-const appId = process.env.REACT_APP_APP_ID;
-const measurementId = process.env.REACT_APP_MEASUREMENT_ID;
+const apiKey = import.meta.env.VITE_API_KEY;
+const authDomain = import.meta.env.VITE_AUTH_DOMAIN;
+const databaseURL = import.meta.env.VITE_DATABASE_URL;
+const projectId = import.meta.env.VITE_PROJECT_ID;
+const storageBucket = import.meta.env.VITE_STORAGE_BUCKET;
+const messagingSenderId = import.meta.env.VITE_MESSAGING_SENDER_ID;
+const appId = import.meta.env.VITE_APP_ID;
+const measurementId = import.meta.env.VITE_MEASUREMENT_ID;
 
 const firebaseConfig = {
   apiKey,
