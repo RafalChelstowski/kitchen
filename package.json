@@ -50,12 +50,10 @@
     "zustand": "3.6.8"
   },
   "scripts": {
-    "start": "BROWSER=none concurrently \"craco start\" \"firebase emulators:start\"",
-    "start:read": "BROWSER=none concurrently \"craco start\" \"firebase emulators:start --import=./database_data\"",
-    "start:write": "BROWSER=none concurrently \"craco start\" \"firebase emulators:start --import=./database_data --export-on-exit=./database_data\"",
-    "build": "GENERATE_SOURCEMAP=false craco build",
-    "test": "yarn test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "eslintConfig": {
     "extends": [
