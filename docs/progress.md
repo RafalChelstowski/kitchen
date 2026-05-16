@@ -7,7 +7,7 @@
 - [x] Update package scripts for pnpm/Vite | AC: scripts include `dev`, `build`, `typecheck`, `test`, no scripts call `craco`, `react-scripts`, `yarn`, or Firebase emulators
 - [x] Add pnpm package manager metadata | AC: `package.json` has `packageManager: pnpm@11.1.2`, `pnpm-lock.yaml` exists, `yarn.lock` is removed
 - [x] Remove CRA/Craco runtime dependencies | AC: package dependencies no longer include `react-scripts`, `@craco/craco`, `worker-plugin`, or `worker-loader`
-- [ ] Remove unused worker placeholder | AC: `src/raycast.worker.ts` is removed if unused, no source import references `react-hooks-worker`
+- [x] Remove unused worker placeholder | AC: `src/raycast.worker.ts` is removed if unused, no source import references `react-hooks-worker`
 - [ ] Remove obsolete web-vitals reporting | AC: `src/reportWebVitals.ts` is removed, `web-vitals` is removed from dependencies, no source imports `reportWebVitals`
 - [ ] Install Tailwind 4 Vite integration | AC: package dependencies include `tailwindcss@4.3.0` and `@tailwindcss/vite@4.3.0`, old `@tailwindcss/postcss7-compat` alias is gone
 - [ ] Wire Tailwind through Vite | AC: `vite.config.ts` uses the Tailwind Vite plugin, `craco.config.js` no longer exists, `pnpm build` compiles CSS
@@ -49,3 +49,4 @@
 ## Findings
 
 (critical discoveries only)
+- 2026-05-16: `pnpm` is not on PATH; `COREPACK_HOME=/tmp/corepack-cache HOME=/tmp PNPM_HOME=/tmp/pnpm-home npm_config_store_dir=/tmp/pnpm-store corepack pnpm typecheck` reaches install but pnpm 11 blocks on ignored dependency build scripts. Direct `./node_modules/.bin/tsc --noEmit` currently fails on pre-existing `src/api/database.ts` generic `Object` typing and `src/types/common/navigator.ts` XR interface mismatch.
