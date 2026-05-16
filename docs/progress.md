@@ -15,7 +15,7 @@
 - [x] Remove React Query bootstrap | AC: `src/index.tsx` no longer imports `react-query`, `QueryClientProvider`, or `ReactQueryDevtools`, app renders without provider wrapping
 - [x] Remove React Query context bridge | AC: `src/App.tsx` no longer checks `window.ReactQueryClientContext`, no `useContextBridge` import remains
 - [x] Delete Firebase config files | AC: `firebase.json` is removed, package scripts no longer reference Firebase emulators, package dependencies no longer include `firebase` or `firebase-admin`
-- [ ] Delete Firebase API modules | AC: Firebase app/auth/database/analytics files are removed or empty-unused, no source imports from `src/api/firebase`, `src/api/database`, `src/api/user`, or `src/api/analytics`
+- [x] Delete Firebase API modules | AC: Firebase app/auth/database/analytics files are removed or empty-unused, no source imports from `src/api/firebase`, `src/api/database`, `src/api/user`, or `src/api/analytics`
 - [ ] Delete React Query API hooks | AC: `useSnapshot`, `useSet`, `useUpdate`, `useRemove`, and `useRealtimeQuery` are removed or unused, no source imports them
 - [ ] Add local achievement catalog module | AC: catalog contains exactly 9 entries keyed by `AchievementName`, each entry has `fullName` and `description`, catalog contains no player dates
 - [ ] Add Fridge achievement catalog entry | AC: `FRIDGE` maps to `Fridge door`, description is `If you don't like what you've found inside - maybe throw it outside?`
@@ -52,3 +52,4 @@
 - 2026-05-16: `pnpm` is not on PATH; `COREPACK_HOME=/tmp/corepack-cache HOME=/tmp PNPM_HOME=/tmp/pnpm-home npm_config_store_dir=/tmp/pnpm-store corepack pnpm typecheck` reaches install but pnpm 11 blocks on ignored dependency build scripts. Direct `./node_modules/.bin/tsc --noEmit` currently fails on pre-existing `src/api/database.ts` generic `Object` typing and `src/types/common/navigator.ts` XR interface mismatch.
 - 2026-05-16: `pnpm approve-builds --all` created `pnpm-workspace.yaml` with build-script approvals for `@firebase/util`, `core-js`, `cypress`, and `protobufjs`; after that, `COREPACK_HOME=/tmp/corepack-cache HOME=/tmp PNPM_HOME=/tmp/pnpm-home npm_config_store_dir=/tmp/pnpm-store corepack pnpm build` runs Vite successfully.
 - 2026-05-16: React Query provider bootstrap and the temporary `window.ReactQueryClientContext` bridge have both been removed; remaining React Query usage is in later API/user checklist items.
+- 2026-05-16: Firebase app/auth/database/analytics modules were deleted; the remaining auth/query hooks now use temporary local no-op shims until later checklist items remove those surfaces.

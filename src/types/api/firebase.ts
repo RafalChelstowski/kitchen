@@ -1,6 +1,12 @@
-import firebase from 'firebase';
+export type FirebaseApp = never;
 
-export type FirebaseApp = typeof firebase;
-export type UserCredential = firebase.auth.UserCredential;
+export type UserCredential = {
+  user: {
+    uid: string;
+  } | null;
+};
 
-export type User = firebase.User;
+export type User = {
+  uid: string;
+  displayName?: string | null;
+};

@@ -1,7 +1,5 @@
 import { UseMutateAsyncFunction, useMutation } from 'react-query';
 
-import { set as dbSet, update as dbUpdate } from '../database';
-
 export interface SetMutationParams<T> {
   path: string;
   payload: T;
@@ -22,13 +20,7 @@ export interface SetMutationResults<T> {
 export function useSet<T>(): SetMutationResults<T> {
   const { mutateAsync, reset } = useMutation(
     async (params: SetMutationParams<T>) => {
-      const { path, payload } = params;
-      const result = await dbSet({
-        path,
-        payload,
-      });
-
-      return result;
+      return params.payload;
     }
   );
 
@@ -49,13 +41,7 @@ export interface UpdateMutationResults<T> {
 export function useUpdate<T>(): UpdateMutationResults<T> {
   const { mutateAsync, reset } = useMutation(
     async (params: SetMutationParams<T>) => {
-      const { path, payload } = params;
-      const result = await dbUpdate({
-        path,
-        payload,
-      });
-
-      return result;
+      return params.payload;
     }
   );
 

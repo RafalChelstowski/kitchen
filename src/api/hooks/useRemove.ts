@@ -1,7 +1,5 @@
 import { UseMutateAsyncFunction, useMutation } from 'react-query';
 
-import { remove } from '../database';
-
 export type RemoveFn = UseMutateAsyncFunction<
   unknown,
   unknown,
@@ -15,8 +13,7 @@ interface MutationResults {
 
 export function useRemove(): MutationResults {
   const { mutateAsync } = useMutation(async (path: string) => {
-    const result = await remove(path);
-    return result;
+    return path;
   });
 
   return { remove: mutateAsync };
