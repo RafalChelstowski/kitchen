@@ -20,7 +20,7 @@
 - [x] Add local achievement catalog module | AC: catalog contains exactly 9 entries keyed by `AchievementName`, each entry has `fullName` and `description`, catalog contains no player dates
 - [x] Add Fridge achievement catalog entry | AC: `FRIDGE` maps to `Fridge door`, description is `If you don't like what you've found inside - maybe throw it outside?`
 - [x] Add letter achievement catalog entries | AC: `AT`, `BO`, `CU`, and `DK` map to `Letter T/O/U/K`, descriptions are `Ultra rare piece 1/4` through `Ultra rare piece 4/4`
-- [ ] Add remaining achievement catalog entries | AC: `COFFEE`, `WINDOW`, `NEON`, and `HARNAS` have the agreed full names and descriptions
+- [x] Add remaining achievement catalog entries | AC: `COFFEE`, `WINDOW`, `NEON`, and `HARNAS` have the agreed full names and descriptions
 - [ ] Upgrade Zustand store API | AC: store imports use current Zustand API shape, TypeScript accepts store creation, existing selectors compile
 - [ ] Add Zustand persistence middleware | AC: store uses `persist`, storage key is stable, persisted state includes achievements, gfxSettings, and pointerSpeed
 - [ ] Exclude transient state from persistence | AC: persistence partialization excludes coffeeState, letters, playerStatus, and isLocked
@@ -53,3 +53,4 @@
 - 2026-05-16: `pnpm approve-builds --all` created `pnpm-workspace.yaml` with build-script approvals for `@firebase/util`, `core-js`, `cypress`, and `protobufjs`; after that, `COREPACK_HOME=/tmp/corepack-cache HOME=/tmp PNPM_HOME=/tmp/pnpm-home npm_config_store_dir=/tmp/pnpm-store corepack pnpm build` runs Vite successfully.
 - 2026-05-16: React Query provider bootstrap and the temporary `window.ReactQueryClientContext` bridge have both been removed; remaining React Query usage is in later API/user checklist items.
 - 2026-05-16: Firebase app/auth/database/analytics modules were deleted; the remaining auth/query hooks now use temporary local no-op shims until later checklist items remove those surfaces.
+- 2026-05-16: Original achievement copy is still readable from the public Realtime Database at `https://kitchen-5f4db-default-rtdb.europe-west1.firebasedatabase.app/achievementDescriptions.json`.

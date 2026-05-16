@@ -6,8 +6,8 @@ export const achievementCatalog: AchievementDescriptions = {
     description: "If you don't like what you've found inside - maybe throw it outside?",
   },
   [AchievementName.HARNAS]: {
-    fullName: 'harnas',
-    description: 'harnas',
+    fullName: 'Kraft Beer Lover',
+    description: 'Throw harnas through an open window.',
   },
   [AchievementName.AT]: {
     fullName: 'Letter T',
@@ -26,15 +26,15 @@ export const achievementCatalog: AchievementDescriptions = {
     description: 'Ultra rare piece 4/4',
   },
   [AchievementName.NEON]: {
-    fullName: 'neon',
-    description: 'neon',
+    fullName: 'Neon sign',
+    description: 'Found a way to turn on the neon light.',
   },
   [AchievementName.WINDOW]: {
-    fullName: 'window',
-    description: 'window',
+    fullName: 'Window',
+    description: 'window.open(), but in 3D',
   },
   [AchievementName.COFFEE]: {
-    fullName: 'coffee',
-    description: 'coffee',
+    fullName: 'Barista',
+    description: 'There is no milk here, sorry...',
   },
 };
