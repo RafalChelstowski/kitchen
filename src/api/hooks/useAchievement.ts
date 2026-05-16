@@ -2,14 +2,14 @@ import { toast } from 'react-toastify';
 
 import isUndefined from 'lodash/isUndefined';
 
-import { getState, setState } from '../../store/store';
+import { getState } from '../../store/store';
 import { AchievementName, AchievementPayloadStatus } from '../../types';
 
 export function useAchievement(): {
   addAchievement: (name: AchievementName) => Promise<void>;
 } {
   const addAchievement = async (name: AchievementName) => {
-    const { achievements } = getState();
+    const { achievements, setAchievement } = getState();
 
     if (!isUndefined(achievements[name])) {
       return;
@@ -20,7 +20,7 @@ export function useAchievement(): {
       status: AchievementPayloadStatus.NEW,
     };
 
-    setState({ achievements: { ...achievements, [name]: payload } });
+    setAchievement(name, payload);
     toast.success('New achievement!');
   };
 
