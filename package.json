@@ -48,7 +48,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "vitest --run"
   },
   "eslintConfig": {
     "extends": [
@@ -87,10 +87,12 @@
     "concurrently": "^6.0.2",
     "cypress": "^9.5.3",
     "eslint-plugin-jest": "^24.4.2",
+    "jsdom": "^29.1.1",
     "postcss": "^7",
     "tailwindcss": "4.3.0",
     "ts-jest": "^27.1.4",
-    "vite": "8.0.13"
+    "vite": "8.0.13",
+    "vitest": "^4.1.6"
   },
   "resolutions": {
     "//": "See https://github.com/facebook/create-react-app/issues/11773",
