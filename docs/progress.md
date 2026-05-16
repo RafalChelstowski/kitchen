@@ -11,7 +11,7 @@
 - [x] Remove obsolete web-vitals reporting | AC: `src/reportWebVitals.ts` is removed, `web-vitals` is removed from dependencies, no source imports `reportWebVitals`
 - [x] Install Tailwind 4 Vite integration | AC: package dependencies include `tailwindcss@4.3.0` and `@tailwindcss/vite@4.3.0`, old `@tailwindcss/postcss7-compat` alias is gone
 - [x] Wire Tailwind through Vite | AC: `vite.config.ts` uses the Tailwind Vite plugin, `craco.config.js` no longer exists, `pnpm build` compiles CSS
-- [ ] Preserve existing Tailwind app styles | AC: `src/index.css` still defines existing base/components styles, rendered class names used by Nav/Menu/Settings/Achievements remain present in source
+- [x] Preserve existing Tailwind app styles | AC: `src/index.css` still defines existing base/components styles, rendered class names used by Nav/Menu/Settings/Achievements remain present in source
 - [ ] Remove React Query bootstrap | AC: `src/index.tsx` no longer imports `react-query`, `QueryClientProvider`, or `ReactQueryDevtools`, app renders without provider wrapping
 - [ ] Remove React Query context bridge | AC: `src/App.tsx` no longer checks `window.ReactQueryClientContext`, no `useContextBridge` import remains
 - [ ] Delete Firebase config files | AC: `firebase.json` is removed, package scripts no longer reference Firebase emulators, package dependencies no longer include `firebase` or `firebase-admin`
