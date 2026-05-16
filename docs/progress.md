@@ -31,7 +31,7 @@
 - [x] Make viewed status local | AC: hovering or viewing a NEW achievement marks it `VIEWED` through Zustand only, no query refetch or remote update remains
 - [x] Remove auth-dependent nav states | AC: Nav no longer imports `useUser` or `userApi`, nav links are limited to Home, Settings, and Achievements
 - [x] Remove auth routes from user menu | AC: UserMenus no longer routes sign in, sign up, sign out, account, or password reset pages
-- [ ] Delete account and password components | AC: sign-in, sign-up, sign-out, account, password change, password reset, and sign-out button components are removed or unused
+- [x] Delete account and password components | AC: sign-in, sign-up, sign-out, account, password change, password reset, and sign-out button components are removed or unused
 - [ ] Remove user type exports tied to Firebase | AC: Firebase user/api type files are removed or unused, no source import references Firebase types
 - [ ] Remove React Query dependency | AC: `react-query` is absent from `package.json`, no source import references `react-query`
 - [ ] Remove Firebase-related dev dependencies | AC: `cypress-firebase`, `firebase-admin`, and unused Cypress Firebase tooling are absent from `package.json`
