@@ -2,6 +2,7 @@
   "name": "kitchen",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.1.2",
   "dependencies": {
     "@craco/craco": "^6.1.1",
     "@react-spring/three": "^9.4.5",
