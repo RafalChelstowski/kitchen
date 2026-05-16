@@ -2,8 +2,8 @@ import { AchievementDescriptions, AchievementName } from '../../types';
 
 export const achievementCatalog: AchievementDescriptions = {
   [AchievementName.FRIDGE]: {
-    fullName: 'fridge',
-    description: 'fridge',
+    fullName: 'Fridge door',
+    description: "If you don't like what you've found inside - maybe throw it outside?",
   },
   [AchievementName.HARNAS]: {
     fullName: 'harnas',
