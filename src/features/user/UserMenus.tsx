@@ -1,21 +1,14 @@
-import { Redirect, Route } from 'wouter';
+import { Route } from 'wouter';
 
-import { useUser } from '../../api/hooks/useUser';
 import { LockButton } from '../../common/components/LockButton';
 import { MouseLeftButton } from '../../common/ui/MouseLeftButtonIcon';
 import { useStore } from '../../store/store';
 import { Nav, routes } from '../Nav';
 import { Achievements as AchievementsPage } from './Achievements';
-import { PasswordForgetPage } from './PasswordForget';
 import { SettingsPage } from './Settings';
-import { SignInPage } from './SignIn';
-import { SignOutPage } from './SignOut';
-import { SignUpPage } from './SignUp';
-import { UserAccountPage } from './UserAccountPage';
 
 export function UserMenus(): JSX.Element | null {
   const isLocked = useStore((state) => state.isLocked);
-  const { uid } = useUser();
 
   if (isLocked) {
     return null;
@@ -73,29 +66,8 @@ export function UserMenus(): JSX.Element | null {
               </div>
             </div>
           </Route>
-          <Route
-            path={routes.SIGN_IN}
-            component={uid ? () => <Redirect to={routes.HOME} /> : SignInPage}
-          />
-          <Route
-            path={routes.SIGN_UP}
-            component={uid ? () => <Redirect to={routes.HOME} /> : SignUpPage}
-          />
-          <Route
-            path={routes.ACCOUNT}
-            component={
-              uid ? UserAccountPage : () => <Redirect to={routes.HOME} />
-            }
-          />
           <Route path={routes.ACHIEVEMENTS} component={AchievementsPage} />
           <Route path={routes.SETTINGS} component={SettingsPage} />
-          <Route
-            path={routes.PASSWORD_FORGET}
-            component={
-              uid ? () => <Redirect to={routes.HOME} /> : PasswordForgetPage
-            }
-          />
-          <Route path={routes.SIGN_OUT} component={SignOutPage} />
         </div>
       </div>
     </main>
