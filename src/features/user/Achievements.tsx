@@ -21,6 +21,10 @@ export function PlayerAchievements({
   achievements,
   achievementsDescriptions,
 }: PlayerAchievementsProps): JSX.Element {
+  const markAchievementViewed = useStore(
+    (state) => state.markAchievementViewed
+  );
+
   return (
     <>
       {Object.entries(achievements).map(([k], i) => {
@@ -35,6 +39,11 @@ export function PlayerAchievements({
         return (
           // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events
           <div
+            onMouseOver={() => {
+              if (isNew) {
+                markAchievementViewed(name);
+              }
+            }}
             key={k}
             className={`flex flex-row font-semibold text-lg transition-colors duration-1000 ${
               isNew ? 'text-tGreen' : 'text-white'
