@@ -1,4 +1,3 @@
-export * from './api';
 export * from './common/controls';
 export * from './common/navigator';
 export * from './common/gltf';

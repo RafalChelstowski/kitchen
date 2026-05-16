@@ -32,7 +32,7 @@
 - [x] Remove auth-dependent nav states | AC: Nav no longer imports `useUser` or `userApi`, nav links are limited to Home, Settings, and Achievements
 - [x] Remove auth routes from user menu | AC: UserMenus no longer routes sign in, sign up, sign out, account, or password reset pages
 - [x] Delete account and password components | AC: sign-in, sign-up, sign-out, account, password change, password reset, and sign-out button components are removed or unused
-- [ ] Remove user type exports tied to Firebase | AC: Firebase user/api type files are removed or unused, no source import references Firebase types
+- [x] Remove user type exports tied to Firebase | AC: Firebase user/api type files are removed or unused, no source import references Firebase types
 - [ ] Remove React Query dependency | AC: `react-query` is absent from `package.json`, no source import references `react-query`
 - [ ] Remove Firebase-related dev dependencies | AC: `cypress-firebase`, `firebase-admin`, and unused Cypress Firebase tooling are absent from `package.json`
 - [ ] Replace Jest with Vitest config | AC: Vitest config exists, `jest.config.js` is removed, test script runs Vitest
