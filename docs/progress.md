@@ -17,7 +17,7 @@
 - [x] Delete Firebase config files | AC: `firebase.json` is removed, package scripts no longer reference Firebase emulators, package dependencies no longer include `firebase` or `firebase-admin`
 - [x] Delete Firebase API modules | AC: Firebase app/auth/database/analytics files are removed or empty-unused, no source imports from `src/api/firebase`, `src/api/database`, `src/api/user`, or `src/api/analytics`
 - [x] Delete React Query API hooks | AC: `useSnapshot`, `useSet`, `useUpdate`, `useRemove`, and `useRealtimeQuery` are removed or unused, no source imports them
-- [ ] Add local achievement catalog module | AC: catalog contains exactly 9 entries keyed by `AchievementName`, each entry has `fullName` and `description`, catalog contains no player dates
+- [x] Add local achievement catalog module | AC: catalog contains exactly 9 entries keyed by `AchievementName`, each entry has `fullName` and `description`, catalog contains no player dates
 - [ ] Add Fridge achievement catalog entry | AC: `FRIDGE` maps to `Fridge door`, description is `If you don't like what you've found inside - maybe throw it outside?`
 - [ ] Add letter achievement catalog entries | AC: `AT`, `BO`, `CU`, and `DK` map to `Letter T/O/U/K`, descriptions are `Ultra rare piece 1/4` through `Ultra rare piece 4/4`
 - [ ] Add remaining achievement catalog entries | AC: `COFFEE`, `WINDOW`, `NEON`, and `HARNAS` have the agreed full names and descriptions
