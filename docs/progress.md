@@ -42,7 +42,7 @@
 - [x] Add achievement unlock unit test | AC: test verifies first unlock adds payload with NEW, second unlock for same achievement does not overwrite existing payload
 - [x] Add achievement viewed unit test | AC: test verifies marking viewed changes status to VIEWED and keeps the original date
 - [x] Final dependency cleanup | AC: `package.json` contains no unused modernization leftovers identified by source search, removed packages have no remaining imports
-- [ ] Final verification pass | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes
+- [x] Final verification pass | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes
 
 ---
 
@@ -55,6 +55,6 @@
 - 2026-05-16: Firebase app/auth/database/analytics modules were deleted; the remaining auth/query hooks now use temporary local no-op shims until later checklist items remove those surfaces.
 - 2026-05-16: Original achievement copy is still readable from the public Realtime Database at `https://kitchen-5f4db-default-rtdb.europe-west1.firebasedatabase.app/achievementDescriptions.json`.
 - 2026-05-16: `pnpm test` now starts `vitest --run`; the existing `src/App.test.tsx` suite fails during collection because Vite cannot resolve `@react-three/cannon` from `src/App.tsx`, which is left for the app smoke-test task.
-- 2026-05-16: `pnpm typecheck` currently stops in `vite.config.ts` because TypeScript node resolution cannot resolve the Vite 8 and Tailwind Vite package exports under the current config.
+- 2026-05-16: `pnpm typecheck` passes after adding explicit TypeScript `paths` for Vite 8 and Tailwind Vite config imports; this avoids switching the whole app to Node ESM module resolution.
 - 2026-05-16: `src/App.test.tsx` now mocks the WebGL/physics scene boundary and asserts the app shell with RTL; `vitest.config.ts` has a test-only alias for `@react-three/cannon` because the package has no CommonJS `main` entry for Vitest resolution.
 - 2026-05-16: Final dependency cleanup removed stale CRA/Jest/Cypress/Babel/PostCSS/worker-analysis package entries; `pnpm install --ignore-scripts` completes after pruning, while plain install still reports the old ignored Cypress build from local removal state.
