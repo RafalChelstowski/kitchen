@@ -1,8 +1,5 @@
-import { useState } from 'react';
-
 import isEmpty from 'lodash/isEmpty';
 
-import { useUser } from '../../api/hooks/useUser';
 import { useStore } from '../../store/store';
 import {
   AchievementDescriptions,
@@ -14,8 +11,6 @@ import { achievementCatalog } from './achievementCatalog';
 
 const cellClassName = 'p-6';
 const achievementTotal = 9;
-
-type AchievementMode = 'player' | 'global';
 
 interface PlayerAchievementsProps {
   achievements: AchievementsType;
@@ -58,16 +53,9 @@ export function PlayerAchievements({
   );
 }
 
-function GlobalAchievements() {
-  return null;
-}
-
 export function Achievements(): JSX.Element {
   const achievements = useStore((state) => state.achievements);
   const noAchievements = isEmpty(achievements);
-  const user = useUser();
-  const [achievementsView, setAchievementsView] =
-    useState<AchievementMode>('player');
 
   const achievementsDescriptions = achievementCatalog;
   const isFetching = false;
@@ -83,40 +71,18 @@ export function Achievements(): JSX.Element {
   return (
     <div className="flex-col items-center w-full my-10 overflow-y-auto">
       <div className="flex flex-row">
-        <div className="flex w-1/2">
-          <div className="text-lg font-black p-6">
-            {isFetching
-              ? 'Loading...'
-              : `Achievements collected: ${
-                  Object.entries(achievements).length
-                }/${achievementTotal}`}
-          </div>
-        </div>
-        <div className="flex w-1/2 place-items-center">
-          {user.uid ? (
-            <button
-              className="bg-tGreen font-semibold text-sm py-1 px-10 h-10"
-              type="button"
-              name="toggle achievements mode"
-              onClick={() =>
-                setAchievementsView(
-                  achievementsView === 'player' ? 'global' : 'player'
-                )
-              }
-            >
-              {achievementsView === 'player' ? 'Global' : 'Local'}
-            </button>
-          ) : null}
+        <div className="text-lg font-black p-6">
+          {isFetching
+            ? 'Loading...'
+            : `Achievements collected: ${
+                Object.entries(achievements).length
+              }/${achievementTotal}`}
         </div>
       </div>
-      {achievementsView === 'player' ? (
-        <PlayerAchievements
-          achievements={achievements}
-          achievementsDescriptions={achievementsDescriptions}
-        />
-      ) : (
-        <GlobalAchievements />
-      )}
+      <PlayerAchievements
+        achievements={achievements}
+        achievementsDescriptions={achievementsDescriptions}
+      />
     </div>
   );
 }
