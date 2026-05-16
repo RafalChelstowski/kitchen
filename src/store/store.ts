@@ -1,7 +1,8 @@
 import { produce } from 'immer';
-import create, { StateSelector } from 'zustand';
+import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 
 import { State } from '../types';
 
@@ -19,7 +20,7 @@ export const initialState = {
   pointerSpeed: '0.2',
 };
 
-const useStoreImpl = create<State>(
+const useStoreImpl = create<State>()(
   devtools(
     (set) => ({
       ...initialState,
@@ -42,10 +43,10 @@ const useStoreImpl = create<State>(
 
 export { shallow };
 
-const useStore = <T>(sel: StateSelector<State, T>): T =>
-  useStoreImpl(sel, shallow);
-
-Object.assign(useStore, useStoreImpl);
+const useStore = Object.assign(
+  <T>(selector: (state: State) => T): T => useStoreImpl(useShallow(selector)),
+  useStoreImpl
+);
 
 const { getState, setState, subscribe } = useStoreImpl;
 

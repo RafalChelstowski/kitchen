@@ -1,6 +1,6 @@
 import { useEvent } from 'react-use';
 
-import create from 'zustand';
+import { create } from 'zustand';
 
 import { useStore } from '../../store/store';
 import { KeyboardKeys } from '../../types';
@@ -12,7 +12,7 @@ export interface Controls {
   controlsRight: boolean;
 }
 
-export const useControlsStore = create(() => ({
+export const useControlsStore = create<Controls>(() => ({
   controlsUp: false,
   controlsDown: false,
   controlsLeft: false,
