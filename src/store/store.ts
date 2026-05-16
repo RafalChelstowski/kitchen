@@ -4,7 +4,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 import { useShallow } from 'zustand/react/shallow';
 
-import { State } from '../types';
+import { AchievementPayloadStatus, State } from '../types';
 
 export const STORE_PERSISTENCE_KEY = 'kitchen-store';
 
@@ -41,6 +41,19 @@ const useStoreImpl = create<State>()(
         },
         setAchievements: (achievements) => {
           set(() => ({ achievements }));
+        },
+        markAchievementViewed: (name) => {
+          set(
+            produce<State>((state) => {
+              const achievement = state.achievements[name];
+
+              if (!achievement) {
+                return;
+              }
+
+              achievement.status = AchievementPayloadStatus.VIEWED;
+            })
+          );
         },
         toggleIsLocked: () => set((state) => ({ isLocked: !state.isLocked })),
         setPlayerStatus: (status) => set(() => ({ playerStatus: status })),

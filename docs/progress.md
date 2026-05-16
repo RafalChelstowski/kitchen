@@ -24,7 +24,7 @@
 - [x] Upgrade Zustand store API | AC: store imports use current Zustand API shape, TypeScript accepts store creation, existing selectors compile
 - [x] Add Zustand persistence middleware | AC: store uses `persist`, storage key is stable, persisted state includes achievements, gfxSettings, and pointerSpeed
 - [x] Exclude transient state from persistence | AC: persistence partialization excludes coffeeState, letters, playerStatus, and isLocked
-- [ ] Add achievement viewed action | AC: store exposes an action that changes one achievement status to `VIEWED`, action preserves original date
+- [x] Add achievement viewed action | AC: store exposes an action that changes one achievement status to `VIEWED`, action preserves original date
 - [ ] Convert achievement unlocking to local-only | AC: `useAchievement` no longer reads auth/user/mutation state, duplicate unlocks return without mutation, new unlocks update Zustand and show success toast
 - [ ] Simplify achievements player list | AC: Achievements page reads descriptions from local catalog, player achievements render without Firebase data, collected count denominator is 9
 - [ ] Remove global achievements mode | AC: global leaderboard component/path is removed, Achievements page has no local/global toggle, no code reads all users
