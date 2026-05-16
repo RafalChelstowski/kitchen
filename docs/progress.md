@@ -33,7 +33,7 @@
 - [x] Remove auth routes from user menu | AC: UserMenus no longer routes sign in, sign up, sign out, account, or password reset pages
 - [x] Delete account and password components | AC: sign-in, sign-up, sign-out, account, password change, password reset, and sign-out button components are removed or unused
 - [x] Remove user type exports tied to Firebase | AC: Firebase user/api type files are removed or unused, no source import references Firebase types
-- [ ] Remove React Query dependency | AC: `react-query` is absent from `package.json`, no source import references `react-query`
+- [x] Remove React Query dependency | AC: `react-query` is absent from `package.json`, no source import references `react-query`
 - [ ] Remove Firebase-related dev dependencies | AC: `cypress-firebase`, `firebase-admin`, and unused Cypress Firebase tooling are absent from `package.json`
 - [ ] Replace Jest with Vitest config | AC: Vitest config exists, `jest.config.js` is removed, test script runs Vitest
 - [ ] Make test setup Vitest-compatible | AC: `src/setupTests.ts` imports jest-dom through Vitest-compatible setup, TypeScript recognizes test globals
