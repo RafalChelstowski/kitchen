@@ -29,7 +29,7 @@
 - [x] Simplify achievements player list | AC: Achievements page reads descriptions from local catalog, player achievements render without Firebase data, collected count denominator is 9
 - [x] Remove global achievements mode | AC: global leaderboard component/path is removed, Achievements page has no local/global toggle, no code reads all users
 - [x] Make viewed status local | AC: hovering or viewing a NEW achievement marks it `VIEWED` through Zustand only, no query refetch or remote update remains
-- [ ] Remove auth-dependent nav states | AC: Nav no longer imports `useUser` or `userApi`, nav links are limited to Home, Settings, and Achievements
+- [x] Remove auth-dependent nav states | AC: Nav no longer imports `useUser` or `userApi`, nav links are limited to Home, Settings, and Achievements
 - [ ] Remove auth routes from user menu | AC: UserMenus no longer routes sign in, sign up, sign out, account, or password reset pages
 - [ ] Delete account and password components | AC: sign-in, sign-up, sign-out, account, password change, password reset, and sign-out button components are removed or unused
 - [ ] Remove user type exports tied to Firebase | AC: Firebase user/api type files are removed or unused, no source import references Firebase types
