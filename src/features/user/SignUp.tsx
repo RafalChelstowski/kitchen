@@ -3,7 +3,6 @@ import { ChangeEvent, FormEvent, useState } from 'react';
 import { Link } from 'wouter';
 
 import { userApi } from '../../api';
-import { useSet } from '../../api/hooks/useSet';
 import { routes } from '../Nav';
 
 export interface SignUpFormData {
@@ -27,7 +26,6 @@ function SignUpForm(): JSX.Element {
     () => INITIAL_STATE
   );
   const { username, email, passwordOne, passwordTwo, error } = formState;
-  const { set } = useSet();
 
   const isInvalid =
     passwordOne !== passwordTwo ||
@@ -45,23 +43,9 @@ function SignUpForm(): JSX.Element {
 
       await userApi.updateUserDisplayName(username);
 
-      await new Promise((resolve) => {
-        if (!newUser.user) {
-          throw new Error('something went wrong while adding user');
-        }
-
-        set(
-          {
-            path: `users/${newUser.user.uid}`,
-            payload: { displayName: username },
-          },
-          {
-            onSuccess: (res) => {
-              resolve(res);
-            },
-          }
-        );
-      });
+      if (!newUser.user) {
+        throw new Error('something went wrong while adding user');
+      }
     } catch (err) {
       setFormsState({ ...formState, error: err as Error });
     }

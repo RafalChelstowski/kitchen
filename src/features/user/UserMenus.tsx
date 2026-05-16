@@ -1,14 +1,9 @@
-import { useEffect } from 'react';
-
-import { isEmpty } from 'lodash';
 import { Redirect, Route } from 'wouter';
 
-import { useSnapshot } from '../../api/hooks/useSnapshot';
 import { useUser } from '../../api/hooks/useUser';
 import { LockButton } from '../../common/components/LockButton';
 import { MouseLeftButton } from '../../common/ui/MouseLeftButtonIcon';
 import { useStore } from '../../store/store';
-import { Achievements } from '../../types';
 import { Nav, routes } from '../Nav';
 import { Achievements as AchievementsPage } from './Achievements';
 import { PasswordForgetPage } from './PasswordForget';
@@ -21,21 +16,6 @@ import { UserAccountPage } from './UserAccountPage';
 export function UserMenus(): JSX.Element | null {
   const isLocked = useStore((state) => state.isLocked);
   const { uid } = useUser();
-  const achievements = useStore((state) => state.achievements);
-  const setAchievements = useStore((state) => state.setAchievements);
-
-  const { data } = useSnapshot<Achievements | null>(
-    `users/${uid}/achievements`,
-    {
-      enabled: Boolean(uid) && isEmpty(achievements),
-    }
-  );
-
-  useEffect(() => {
-    if (data) {
-      setAchievements(data);
-    }
-  }, [data, setAchievements]);
 
   if (isLocked) {
     return null;

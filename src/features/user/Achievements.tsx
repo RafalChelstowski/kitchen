@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { useIsMutating, useQueryClient } from 'react-query';
 
 import isEmpty from 'lodash/isEmpty';
 
-import { useUpdate } from '../../api/hooks/useSet';
-import { useSnapshot } from '../../api/hooks/useSnapshot';
 import { useUser } from '../../api/hooks/useUser';
 import { useStore } from '../../store/store';
 import {
@@ -19,11 +16,6 @@ const cellClassName = 'p-6';
 
 type AchievementMode = 'player' | 'global';
 
-interface UsersAchievementsQueryData {
-  displayName: string | undefined;
-  achievements: AchievementsType;
-}
-
 interface PlayerAchievementsProps {
   achievements: Partial<Record<AchievementName, AchievementPayload>>;
   achievementsDescriptions: AchievementDescriptions;
@@ -33,10 +25,7 @@ export function PlayerAchievements({
   achievements,
   achievementsDescriptions,
 }: PlayerAchievementsProps): JSX.Element {
-  const queryClient = useQueryClient();
-  const mutations = useIsMutating();
   const { uid } = useUser();
-  const { update } = useUpdate<AchievementPayload>();
 
   return (
     <>
@@ -52,18 +41,6 @@ export function PlayerAchievements({
         return (
           // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events
           <div
-            onMouseOver={async () => {
-              if (uid && isNew && mutations === 0) {
-                await update({
-                  path: `users/${uid}/achievements/${name}`,
-                  payload: {
-                    date,
-                    status: AchievementPayloadStatus.VIEWED,
-                  },
-                });
-                queryClient.refetchQueries([`users/${uid}/achievements`]);
-              }
-            }}
             key={k}
             className={`flex flex-row font-semibold text-lg transition-colors duration-1000 ${
               isNew && uid ? 'text-tGreen' : 'text-white'
@@ -83,58 +60,7 @@ export function PlayerAchievements({
 }
 
 function GlobalAchievements() {
-  const { data: usersAchievements, isFetching } =
-    useSnapshot<Record<string, UsersAchievementsQueryData>>(`users`);
-
-  if (!usersAchievements) {
-    return null;
-  }
-
-  if (isFetching) {
-    return (
-      <div className="flex-col items-center w-full mt-10 font-semibold text-lg">
-        Loading...
-      </div>
-    );
-  }
-
-  const achArr = Object.entries(usersAchievements)
-    .map((entry) => {
-      const [userId, userAchievementsQueryData] = entry;
-      return {
-        id: userId,
-        name: userAchievementsQueryData?.displayName || 'mysterious user',
-        achievementsNumber: userAchievementsQueryData.achievements
-          ? Object.entries(userAchievementsQueryData.achievements)?.length
-          : 0,
-      };
-    })
-    .sort((a, b) => b.achievementsNumber - a.achievementsNumber);
-
-  return (
-    <div className="h-4/5 overflow-hidden mt-8">
-      <div className="flex flex-row font-black text-lg mb-5">
-        <div className="w-1/2 text-center">User name: </div>
-        <div className="w-1/2 text-center">Achievements found:</div>
-      </div>
-
-      <div className="h-full overflow-y-auto my-7">
-        {achArr.map((entry) => {
-          return (
-            <div
-              key={entry.id}
-              className="flex flex-row font-semibold text-lg text-center"
-            >
-              <div className="w-1/2 p-4">{entry.name}</div>
-              <div className="w-1/2 p-4 text-center">
-                {entry.achievementsNumber}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 export function Achievements(): JSX.Element {
@@ -144,10 +70,16 @@ export function Achievements(): JSX.Element {
   const [achievementsView, setAchievementsView] =
     useState<AchievementMode>('player');
 
-  const { data: achievementsDescriptions, isFetching } =
-    useSnapshot<AchievementDescriptions>(`achievementDescriptions`, {
-      enabled: !noAchievements,
-    });
+  const achievementsDescriptions = Object.fromEntries(
+    Object.keys(achievements).map((name) => [
+      name,
+      {
+        fullName: name,
+        description: '',
+      },
+    ])
+  ) as AchievementDescriptions;
+  const isFetching = false;
 
   if (!achievementsDescriptions || noAchievements || isFetching) {
     return (
