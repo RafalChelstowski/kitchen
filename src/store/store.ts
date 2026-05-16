@@ -1,10 +1,17 @@
 import { produce } from 'immer';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 import { useShallow } from 'zustand/react/shallow';
 
 import { State } from '../types';
+
+export const STORE_PERSISTENCE_KEY = 'kitchen-store';
+
+type PersistedState = Pick<
+  State,
+  'achievements' | 'gfxSettings' | 'pointerSpeed'
+>;
 
 export const initialState = {
   gfxSettings: {
@@ -22,21 +29,31 @@ export const initialState = {
 
 const useStoreImpl = create<State>()(
   devtools(
-    (set) => ({
-      ...initialState,
-      setAchievement: (name, payload) => {
-        set(
-          produce<State>((state) => {
-            state.achievements[name] = payload;
-          })
-        );
-      },
-      setAchievements: (achievements) => {
-        set(() => ({ achievements }));
-      },
-      toggleIsLocked: () => set((state) => ({ isLocked: !state.isLocked })),
-      setPlayerStatus: (status) => set(() => ({ playerStatus: status })),
-    }),
+    persist<State, [], [], PersistedState>(
+      (set) => ({
+        ...initialState,
+        setAchievement: (name, payload) => {
+          set(
+            produce<State>((state) => {
+              state.achievements[name] = payload;
+            })
+          );
+        },
+        setAchievements: (achievements) => {
+          set(() => ({ achievements }));
+        },
+        toggleIsLocked: () => set((state) => ({ isLocked: !state.isLocked })),
+        setPlayerStatus: (status) => set(() => ({ playerStatus: status })),
+      }),
+      {
+        name: STORE_PERSISTENCE_KEY,
+        partialize: (state) => ({
+          achievements: state.achievements,
+          gfxSettings: state.gfxSettings,
+          pointerSpeed: state.pointerSpeed,
+        }),
+      }
+    ),
     { name: 'kitchenStore' }
   )
 );
