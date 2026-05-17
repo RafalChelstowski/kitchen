@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
 import { useGLTF } from '@react-three/drei';
@@ -7,6 +7,7 @@ import {
   CylinderCollider,
   RapierRigidBody,
   RigidBody,
+  useRapier,
 } from '@react-three/rapier';
 import * as THREE from 'three';
 
@@ -20,6 +21,7 @@ import {
 } from '../../../types';
 
 type PositionTuple = [number, number, number];
+type HarnasBodyType = 'dynamic' | 'kinematicPosition';
 
 const HIDDEN_POSITION: PositionTuple = [2.85, 5, -3.7];
 const INITIAL_POSITION: PositionTuple = [0, 1, 0];
@@ -43,10 +45,27 @@ function objectOrParentHasName(
   return false;
 }
 
+function setNextHarnasTransform(
+  body: RapierRigidBody,
+  quaternion: THREE.Quaternion,
+  euler: THREE.Euler,
+  position: PositionTuple,
+  rotation: PositionTuple
+) {
+  const [x, y, z] = position;
+  const [rX, rY, rZ] = rotation;
+
+  body.setNextKinematicTranslation({ x, y, z });
+  body.setNextKinematicRotation(
+    quaternion.setFromEuler(euler.set(rX, rY, rZ))
+  );
+}
+
 export function Harnas(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
+  const { rapier } = useRapier();
   const { nodes, materials } = useGLTF('/can_uv.gltf') as unknown as GLTFResult;
   const bodyRef = useRef<RapierRigidBody>(null);
   const dummyRef = useRef<THREE.Mesh>(null);
@@ -60,6 +79,8 @@ export function Harnas(): JSX.Element {
   const harnasStatus = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.HIDDEN
   );
+  const [harnasBodyType, setHarnasBodyType] =
+    useState<HarnasBodyType>('dynamic');
 
   const [initialX, initialY, initialZ] = FRIDGE_POSITION;
 
@@ -79,6 +100,11 @@ export function Harnas(): JSX.Element {
 
       if (x[0].distance < 2) {
         harnasStatus.current = InteractiveObjectStatus.PICKED;
+        setHarnasBodyType('kinematicPosition');
+        bodyRef.current?.setBodyType(
+          rapier.RigidBodyType.KinematicPositionBased,
+          true
+        );
         setState({ playerStatus: PlayerStatus.PICKED });
       }
 
@@ -99,6 +125,8 @@ export function Harnas(): JSX.Element {
 
       if (x[0].distance < 2) {
         const { point } = x[0];
+        setHarnasBodyType('dynamic');
+        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
@@ -125,6 +153,11 @@ export function Harnas(): JSX.Element {
       });
 
       harnasStatus.current = InteractiveObjectStatus.PICKED;
+      setHarnasBodyType('kinematicPosition');
+      bodyRef.current?.setBodyType(
+        rapier.RigidBodyType.KinematicPositionBased,
+        true
+      );
       setState({ playerStatus: PlayerStatus.PICKED });
     }
   };
@@ -156,15 +189,12 @@ export function Harnas(): JSX.Element {
       rotationDirection.normalize();
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
 
-      body.setTranslation(
-        { x: position.x, y: position.y, z: position.z },
-        true
-      );
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setRotation(
-        bodyRotation.setFromEuler(bodyEuler.set(0, theta + Math.PI, 0)),
-        true
+      setNextHarnasTransform(
+        body,
+        bodyRotation,
+        bodyEuler,
+        [position.x, position.y, position.z],
+        [0, theta + Math.PI, 0]
       );
     }
   });
@@ -186,6 +216,8 @@ export function Harnas(): JSX.Element {
           camera.getWorldDirection(target);
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 15));
 
+          setHarnasBodyType('dynamic');
+          bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
           bodyRef.current?.setLinvel({ x, y, z }, true);
           bodyRef.current?.setRotation(
             bodyRotation.setFromEuler(
@@ -209,7 +241,7 @@ export function Harnas(): JSX.Element {
       <group name="harnas">
         <RigidBody
           ref={bodyRef}
-          type="dynamic"
+          type={harnasBodyType}
           colliders={false}
           mass={1}
           canSleep={false}
