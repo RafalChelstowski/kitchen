@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
 import { useGLTF } from '@react-three/drei';
@@ -7,6 +7,7 @@ import {
   CuboidCollider,
   type RapierRigidBody,
   RigidBody,
+  useRapier,
 } from '@react-three/rapier';
 import first from 'lodash/first';
 import * as THREE from 'three';
@@ -16,6 +17,7 @@ import { GLTFResult, PlayerStatus } from '../../types';
 
 type PositionTuple = [number, number, number];
 type RotationTuple = [number, number, number];
+type MugBodyType = 'dynamic' | 'kinematicPosition';
 
 interface MugBodyConfig {
   key: string;
@@ -38,6 +40,17 @@ const zCamVec = new THREE.Vector3();
 const rotationDirection = new THREE.Vector3();
 const bodyEuler = new THREE.Euler();
 const bodyRotation = new THREE.Quaternion();
+
+function setNextMugTransform(
+  body: RapierRigidBody,
+  position: THREE.Vector3,
+  rotationY: number
+) {
+  body.setNextKinematicTranslation(position);
+  body.setNextKinematicRotation(
+    bodyRotation.setFromEuler(bodyEuler.set(0, rotationY, 0))
+  );
+}
 
 export function Mugs({
   initialPosition,
@@ -70,8 +83,12 @@ export function Mugs({
   const camera = useThree((state) => state.camera);
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
+  const { rapier } = useRapier();
   const instanceId = useRef<number | undefined>(undefined);
   const bodiesRef = useRef<(RapierRigidBody | null)[]>([]);
+  const [bodyTypes, setBodyTypes] = useState<MugBodyType[]>(() =>
+    Array.from({ length: itemsNumber }, () => 'dynamic')
+  );
 
   const { nodes, materials } = useGLTF(gltfName) as unknown as GLTFResult;
 
@@ -96,6 +113,15 @@ export function Mugs({
 
         if (typeof mugIndex === 'number') {
           instanceId.current = mugIndex;
+          setBodyTypes((current) =>
+            current.map((bodyType, idx) =>
+              idx === mugIndex ? 'kinematicPosition' : bodyType
+            )
+          );
+          bodiesRef.current[mugIndex]?.setBodyType(
+            rapier.RigidBodyType.KinematicPositionBased,
+            true
+          );
           setState({ playerStatus: PlayerStatus.PICKED });
         }
       }
@@ -118,10 +144,18 @@ export function Mugs({
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        bodiesRef.current[instanceId.current]?.setTranslation(
-          { x: point.x, y: point.y + 0.2, z: point.z },
-          true
+        const selectedMugIndex = instanceId.current;
+        const body = bodiesRef.current[selectedMugIndex];
+
+        setBodyTypes((current) =>
+          current.map((bodyType, idx) =>
+            idx === selectedMugIndex ? 'dynamic' : bodyType
+          )
         );
+        body?.setBodyType(rapier.RigidBodyType.Dynamic, true);
+        body?.setTranslation({ x: point.x, y: point.y + 0.2, z: point.z }, true);
+        body?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        body?.setAngvel({ x: 0, y: 0, z: 0 }, true);
 
         instanceId.current = undefined;
         await new Promise((res) => {
@@ -149,8 +183,15 @@ export function Mugs({
           camera.getWorldDirection(target);
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
-          const body = bodiesRef.current?.[instanceId.current];
+          const selectedMugIndex = instanceId.current;
+          const body = bodiesRef.current?.[selectedMugIndex];
 
+          setBodyTypes((current) =>
+            current.map((bodyType, idx) =>
+              idx === selectedMugIndex ? 'dynamic' : bodyType
+            )
+          );
+          body?.setBodyType(rapier.RigidBodyType.Dynamic, true);
           body?.setLinvel({ x, y, z }, true);
           body?.setRotation(
             bodyRotation.setFromEuler(
@@ -179,12 +220,9 @@ export function Mugs({
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
       const body = bodiesRef.current[instanceId.current];
 
-      body?.setTranslation(position, true);
-      body?.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body?.setRotation(
-        bodyRotation.setFromEuler(bodyEuler.set(0, theta + Math.PI, 0)),
-        true
-      );
+      if (body) {
+        setNextMugTransform(body, position, theta + Math.PI);
+      }
     }
   });
 
@@ -197,7 +235,7 @@ export function Mugs({
             bodiesRef.current[idx] = body;
           }}
           colliders={false}
-          type="dynamic"
+          type={bodyTypes[idx] ?? 'dynamic'}
           mass={20}
           canSleep
           position={mug.position}
