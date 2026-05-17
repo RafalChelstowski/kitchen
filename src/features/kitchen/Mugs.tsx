@@ -7,7 +7,6 @@ import {
   CuboidCollider,
   type RapierRigidBody,
   RigidBody,
-  useRapier,
 } from '@react-three/rapier';
 import first from 'lodash/first';
 import * as THREE from 'three';
@@ -18,7 +17,6 @@ import { createHeldItemPoseHelper } from './heldItemPose';
 
 type PositionTuple = [number, number, number];
 type RotationTuple = [number, number, number];
-type MugBodyType = 'dynamic' | 'kinematicPosition';
 
 interface MugBodyConfig {
   key: string;
@@ -39,16 +37,16 @@ interface Props {
 
 const bodyEuler = new THREE.Euler();
 const bodyRotation = new THREE.Quaternion();
+const bodyPosition = new THREE.Vector3();
 
-function setNextMugTransform(
+function syncMugBodyToTransform(
   body: RapierRigidBody,
   position: THREE.Vector3,
-  rotationY: number
+  quaternion: THREE.Quaternion
 ) {
-  body.setNextKinematicTranslation(position);
-  body.setNextKinematicRotation(
-    bodyRotation.setFromEuler(bodyEuler.set(0, rotationY, 0))
-  );
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  body.setRotation(quaternion, true);
 }
 
 export function Mugs({
@@ -82,13 +80,11 @@ export function Mugs({
   const camera = useThree((state) => state.camera);
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
-  const { rapier } = useRapier();
   const instanceId = useRef<number | undefined>(undefined);
   const bodiesRef = useRef<(RapierRigidBody | null)[]>([]);
+  const heldMeshRef = useRef<THREE.Mesh>(null);
   const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
-  const [bodyTypes, setBodyTypes] = useState<MugBodyType[]>(() =>
-    Array.from({ length: itemsNumber }, () => 'dynamic')
-  );
+  const [heldMugIndex, setHeldMugIndex] = useState<number | undefined>();
 
   const { nodes, materials } = useGLTF(gltfName) as unknown as GLTFResult;
 
@@ -113,15 +109,8 @@ export function Mugs({
 
         if (typeof mugIndex === 'number') {
           instanceId.current = mugIndex;
-          setBodyTypes((current) =>
-            current.map((bodyType, idx) =>
-              idx === mugIndex ? 'kinematicPosition' : bodyType
-            )
-          );
-          bodiesRef.current[mugIndex]?.setBodyType(
-            rapier.RigidBodyType.KinematicPositionBased,
-            true
-          );
+          setHeldMugIndex(mugIndex);
+          bodiesRef.current[mugIndex]?.setEnabled(false);
           setState({ playerStatus: PlayerStatus.PICKED });
         }
       }
@@ -147,17 +136,18 @@ export function Mugs({
         const selectedMugIndex = instanceId.current;
         const body = bodiesRef.current[selectedMugIndex];
 
-        setBodyTypes((current) =>
-          current.map((bodyType, idx) =>
-            idx === selectedMugIndex ? 'dynamic' : bodyType
-          )
-        );
-        body?.setBodyType(rapier.RigidBodyType.Dynamic, true);
-        body?.setTranslation({ x: point.x, y: point.y + 0.2, z: point.z }, true);
-        body?.setLinvel({ x: 0, y: 0, z: 0 }, true);
-        body?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        if (body) {
+          syncMugBodyToTransform(
+            body,
+            bodyPosition.set(point.x, point.y + 0.2, point.z),
+            bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0))
+          );
+          body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
 
         instanceId.current = undefined;
+        setHeldMugIndex(undefined);
         await new Promise((res) => {
           setTimeout(res);
         });
@@ -185,26 +175,35 @@ export function Mugs({
 
           const selectedMugIndex = instanceId.current;
           const body = bodiesRef.current?.[selectedMugIndex];
+          const heldMesh = heldMeshRef.current;
 
-          setBodyTypes((current) =>
-            current.map((bodyType, idx) =>
-              idx === selectedMugIndex ? 'dynamic' : bodyType
-            )
-          );
-          body?.setBodyType(rapier.RigidBodyType.Dynamic, true);
-          body?.setLinvel({ x, y, z }, true);
-          body?.setRotation(
-            bodyRotation.setFromEuler(
-              bodyEuler.set(
-                Math.random() * 3,
-                Math.random() * 3,
-                Math.random() * 3
-              )
-            ),
-            true
-          );
+          if (body) {
+            const { position, quaternion } = heldPoseHelperRef.current.compute(
+              camera,
+              [0.15, -0.15, -0.4]
+            );
+
+            syncMugBodyToTransform(
+              body,
+              heldMesh?.getWorldPosition(bodyPosition) ?? position,
+              heldMesh?.getWorldQuaternion(bodyRotation) ?? quaternion
+            );
+            body.setLinvel({ x, y, z }, true);
+            body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+            body.setRotation(
+              bodyRotation.setFromEuler(
+                bodyEuler.set(
+                  Math.random() * 3,
+                  Math.random() * 3,
+                  Math.random() * 3
+                )
+              ),
+              true
+            );
+          }
 
           instanceId.current = undefined;
+          setHeldMugIndex(undefined);
           setState({ playerStatus: null });
         }
       }
@@ -213,15 +212,15 @@ export function Mugs({
 
   useFrame(() => {
     if (instanceId.current !== undefined) {
-      const { position, yaw } = heldPoseHelperRef.current.compute(camera, [
-        0.15,
-        -0.15,
-        -0.4,
-      ]);
-      const body = bodiesRef.current[instanceId.current];
+      const { position, quaternion } = heldPoseHelperRef.current.compute(
+        camera,
+        [0.15, -0.15, -0.4]
+      );
+      const heldMesh = heldMeshRef.current;
 
-      if (body) {
-        setNextMugTransform(body, position, yaw);
+      if (heldMesh) {
+        heldMesh.position.copy(position);
+        heldMesh.quaternion.copy(quaternion);
       }
     }
   });
@@ -235,7 +234,7 @@ export function Mugs({
             bodiesRef.current[idx] = body;
           }}
           colliders={false}
-          type={bodyTypes[idx] ?? 'dynamic'}
+          type="dynamic"
           mass={20}
           canSleep
           position={mug.position}
@@ -247,10 +246,20 @@ export function Mugs({
             geometry={nodes[geometryName].geometry}
             material={customMaterial || materials[materialName]}
             name={`${objName}`}
+            visible={heldMugIndex !== idx}
             userData={{ mugIndex: idx }}
           />
         </RigidBody>
       ))}
+      <mesh
+        castShadow
+        ref={heldMeshRef}
+        geometry={nodes[geometryName].geometry}
+        material={customMaterial || materials[materialName]}
+        name={`${objName}_held`}
+        visible={heldMugIndex !== undefined}
+        raycast={() => undefined}
+      />
     </group>
   );
 }
