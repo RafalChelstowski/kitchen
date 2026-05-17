@@ -6,7 +6,7 @@
 - [x] Derive achievement total from catalog | AC: Achievements page has no hard-coded `achievementTotal = 9`, denominator comes from `achievementCatalog`, and existing tests still pass
 - [x] Remove Firebase cleanup residue | AC: `src/index.css` has no `.firebase-emulator-warning`, README no longer claims Firebase/account/global leaderboard support, and source/README search for `firebase|emulator|leaderboard` returns no stale matches
 - [x] Consolidate Tailwind 4 theme source | AC: custom `tViolet` and `tGreen` colors are defined in one place, redundant Tailwind config/theme duplication is removed, and `pnpm build` compiles existing classes
-- [ ] Replace root non-null assertion in bootstrap | AC: `src/index.tsx` has no eslint disable or `container!`, missing root element throws an explicit error, and `pnpm typecheck` passes
+- [x] Replace root non-null assertion in bootstrap | AC: `src/index.tsx` has no eslint disable or `container!`, missing root element throws an explicit error, and `pnpm typecheck` passes
 - [ ] Remove unused legacy runtime dependencies | AC: unused packages found by source search are removed from `package.json`, including `easystarjs`, `leva`, `nanoid`, `pathfinding`, `react-transition-group`, and unused matching type packages
 - [ ] Decide lint dependency shape | AC: package either has a working lint script using installed lint deps, or old unused ESLint/Prettier packages are removed; no dead lint-only packages remain
 - [ ] Refresh lockfile after dependency cleanup | AC: `pnpm-lock.yaml` matches `package.json`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass
