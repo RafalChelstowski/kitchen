@@ -79,10 +79,12 @@ export function Express(): JSX.Element {
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const tamperRef = useRef<THREE.Group>(null);
+  const heldGripRef = useRef<THREE.Group>(null);
   const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
   const gripPosRef = useRef<PositionTuple>(initialPosition);
   const gripRotRef = useRef<PositionTuple>([0, 0, 0]);
   const coffeePortionRef = useRef<THREE.Mesh>(null);
+  const [isGripHeld, setIsGripHeld] = useState(false);
   const bodyQuaternion = new THREE.Quaternion();
   const bodyEuler = new THREE.Euler();
   const readQuaternion = new THREE.Quaternion();
@@ -284,6 +286,8 @@ export function Express(): JSX.Element {
           rapier.RigidBodyType.KinematicPositionBased,
           true
         );
+        bodyRef.current?.setEnabled(false);
+        setIsGripHeld(true);
         setState({ playerStatus: PlayerStatus.PICKED });
 
         return;
@@ -318,6 +322,8 @@ export function Express(): JSX.Element {
       if (x[0] && x[0].distance < 2 && x[0].object.name.includes('express')) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_EXPRESS;
         setGripBodyType('kinematicPosition');
+        bodyRef.current?.setEnabled(true);
+        setIsGripHeld(false);
         setAnimated('express');
 
         await new Promise((res) => {
@@ -337,6 +343,8 @@ export function Express(): JSX.Element {
       ) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_GRINDER;
         setGripBodyType('kinematicPosition');
+        bodyRef.current?.setEnabled(true);
+        setIsGripHeld(false);
         setAnimated('grinder');
 
         await new Promise((res) => {
@@ -356,6 +364,8 @@ export function Express(): JSX.Element {
       ) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_ACCESSORIES;
         setGripBodyType('kinematicPosition');
+        bodyRef.current?.setEnabled(true);
+        setIsGripHeld(false);
         setAnimated('accessories');
 
         await new Promise((res) => {
@@ -375,6 +385,7 @@ export function Express(): JSX.Element {
       if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
         const { point } = y[0];
         setGripBodyType('dynamic');
+        bodyRef.current?.setEnabled(true);
         bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
@@ -384,6 +395,7 @@ export function Express(): JSX.Element {
         bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
         bodyRef.current?.setAdditionalMass(3, true);
         gripStatus.current = undefined;
+        setIsGripHeld(false);
         await new Promise((res) => {
           setTimeout(res);
         });
@@ -445,19 +457,17 @@ export function Express(): JSX.Element {
     }
 
     if (gripStatus.current === InteractiveObjectStatus.PICKED) {
-      const { position, yaw } = heldPoseHelperRef.current.compute(camera, [
+      const { position, quaternion } = heldPoseHelperRef.current.compute(camera, [
         0.15,
         -0.15,
         -0.3,
       ]);
+      const heldGrip = heldGripRef.current;
 
-      setNextGripTransform(
-        body,
-        bodyQuaternion,
-        bodyEuler,
-        [position.x, position.y, position.z],
-        [0, yaw, 0]
-      );
+      if (heldGrip) {
+        heldGrip.position.copy(position);
+        heldGrip.quaternion.copy(quaternion);
+      }
     }
   });
 
@@ -478,6 +488,7 @@ export function Express(): JSX.Element {
             name="grip-body"
             geometry={accNodes.kolba.geometry}
             material={accMaterials.coffeeAccMaterial}
+            visible={!isGripHeld}
           />
           <mesh
             scale={0}
@@ -491,6 +502,19 @@ export function Express(): JSX.Element {
           </mesh>
         </a.group>
       </RigidBody>
+      <group
+        ref={heldGripRef}
+        name="int-grip-held"
+        visible={isGripHeld}
+        raycast={() => undefined}
+      >
+        <mesh
+          castShadow
+          name="grip-body-held"
+          geometry={accNodes.kolba.geometry}
+          material={accMaterials.coffeeAccMaterial}
+        />
+      </group>
       <group name="express">
         <mesh
           geometry={nodes.bake_express.geometry}
