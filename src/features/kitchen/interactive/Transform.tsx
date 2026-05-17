@@ -444,6 +444,26 @@ export function Transform(): JSX.Element {
             material={mugMaterials.coffeeMaterial}
           />
         </group>
+        <group visible={transformed}>
+          <mesh
+            geometry={mugNodes.Cylinder009.geometry}
+            material={mugMaterials.blackPlasticMaterial}
+          />
+          <mesh
+            geometry={mugNodes.Cylinder009_1.geometry}
+            material={mugMaterials.cupWhiteMaterial}
+            castShadow
+          />
+          <mesh
+            geometry={mugNodes.Cylinder009_2.geometry}
+            material={mugMaterials.cupRedEmmisiveMAterial}
+          />
+          <mesh
+            visible={coffeeState === 'ready'}
+            geometry={mugNodes.Cylinder009_3.geometry}
+            material={mugMaterials.coffeeMaterial}
+          />
+        </group>
       </group>
       <group
         onClick={handleDummyClick}
