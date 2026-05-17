@@ -11,6 +11,8 @@ import { GLTFResult } from '../../types';
 const tBox = new THREE.Box3();
 const material = new THREE.MeshBasicMaterial({ visible: false });
 type PositionTuple = [number, number, number];
+const HARD_SURFACE_FRICTION = 0.85;
+const HARD_SURFACE_RESTITUTION = 0.05;
 
 function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
   const { position, geometry, scale, rotation } = mesh;
@@ -34,6 +36,8 @@ function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
           dimensions[1] / 2,
           dimensions[2] / 2,
         ]}
+        friction={HARD_SURFACE_FRICTION}
+        restitution={HARD_SURFACE_RESTITUTION}
       />
       <mesh
         name="static-cube"
@@ -57,7 +61,11 @@ function CylinderBoundary({ mesh }: { mesh: THREE.Mesh }) {
       colliders={false}
       position={[...position.toArray()]}
     >
-      <CylinderCollider args={[height / 2, radius]} />
+      <CylinderCollider
+        args={[height / 2, radius]}
+        friction={HARD_SURFACE_FRICTION}
+        restitution={HARD_SURFACE_RESTITUTION}
+      />
       <mesh
         name="static-cylinder"
         geometry={geometry}

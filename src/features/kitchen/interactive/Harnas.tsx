@@ -28,6 +28,11 @@ const INITIAL_POSITION: PositionTuple = [0, 1, 0];
 const FRIDGE_POSITION: PositionTuple = [3.0, 0.63, -3.63];
 const THROW_FORWARD_SPEED = 13;
 const THROW_UPWARD_VELOCITY = 2;
+const HARNAS_MASS = 0.35;
+const HARNAS_LINEAR_DAMPING = 0.45;
+const HARNAS_ANGULAR_DAMPING = 2.5;
+const HARNAS_FRICTION = 0.9;
+const HARNAS_RESTITUTION = 0.12;
 const { degToRad } = THREE.MathUtils;
 
 function objectOrParentHasName(
@@ -245,13 +250,17 @@ export function Harnas(): JSX.Element {
           ref={bodyRef}
           type={harnasBodyType}
           colliders={false}
-          mass={1}
-          canSleep={false}
+          mass={HARNAS_MASS}
+          linearDamping={HARNAS_LINEAR_DAMPING}
+          angularDamping={HARNAS_ANGULAR_DAMPING}
+          canSleep
           position={INITIAL_POSITION}
           rotation={initialRotation.current}
         >
           <CylinderCollider
             args={[0.07, 0.06]}
+            friction={HARNAS_FRICTION}
+            restitution={HARNAS_RESTITUTION}
             onCollisionEnter={({ other }) => {
               if (
                 objectOrParentHasName(other.colliderObject, 'floor') ||
