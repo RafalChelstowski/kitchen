@@ -18,7 +18,7 @@
 - [x] Migrate Mugs instanced bodies to Rapier | AC: `Mugs.tsx` uses Rapier instanced rigid bodies, initial grid placement is preserved, selected mug can still be positioned while picked and thrown with velocity
 - [x] Migrate unmounted Rain instanced bodies to Rapier | AC: `Rain.tsx` no longer imports Cannon, falling can instances use Rapier instanced bodies or an equivalent Rapier-compatible implementation, component typechecks even though it is not mounted
 - [x] Remove remaining Cannon imports from tests and source | AC: `rg "@react-three/cannon|useBox|useCylinder|usePlane|Triplet" src` returns no matches, app tests mock Rapier rather than Cannon, `pnpm test` passes
-- [ ] Remove Cannon dependency | AC: `@react-three/cannon` is removed from `package.json`, `pnpm-lock.yaml` is refreshed, `rg "@react-three/cannon" package.json pnpm-lock.yaml src` returns no active dependency/import matches
+- [x] Remove Cannon dependency | AC: `@react-three/cannon` is removed from `package.json`, `pnpm-lock.yaml` is refreshed, `rg "@react-three/cannon" package.json pnpm-lock.yaml src` returns no active dependency/import matches
 - [ ] Update physics migration docs for completion | AC: `docs/physics-migration.md` states the project now uses `@react-three/rapier@2.2.0`, lists any behavior intentionally left equivalent rather than identical, removes obsolete instruction saying not to migrate in this pass
 - [ ] Fix source compatibility from React 19 / R3F 9 / Three upgrade | AC: any type or API break caused by the stack upgrade is fixed without changing gameplay scope, `pnpm typecheck` passes
 - [ ] Build the migrated app | AC: `pnpm build` passes, build no longer reports missing Cannon modules, any remaining Three/Rapier warnings are recorded under Findings
