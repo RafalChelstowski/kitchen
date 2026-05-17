@@ -9,7 +9,7 @@
 - [x] Replace root non-null assertion in bootstrap | AC: `src/index.tsx` has no eslint disable or `container!`, missing root element throws an explicit error, and `pnpm typecheck` passes
 - [x] Remove unused legacy runtime dependencies | AC: unused packages found by source search are removed from `package.json`, including `easystarjs`, `leva`, `nanoid`, `pathfinding`, `react-transition-group`, and unused matching type packages
 - [x] Decide lint dependency shape | AC: package either has a working lint script using installed lint deps, or old unused ESLint/Prettier packages are removed; no dead lint-only packages remain
-- [ ] Refresh lockfile after dependency cleanup | AC: `pnpm-lock.yaml` matches `package.json`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass
+- [x] Refresh lockfile after dependency cleanup | AC: `pnpm-lock.yaml` matches `package.json`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass
 - [ ] Upgrade TypeScript and core type packages | AC: TypeScript and React/Node type packages are updated, `tsconfig.json` no longer needs Vite/Tailwind paths workarounds, and `pnpm typecheck` passes
 - [ ] Modernize TypeScript compiler target | AC: `tsconfig.json` targets a modern browser/runtime level instead of `es5`, uses Vite-friendly module resolution, and `pnpm build` and `pnpm test` pass
 - [ ] Update React 18 patch baseline | AC: `react` and `react-dom` are on the latest React 18 line, matching type packages are compatible, and the existing app smoke test passes
