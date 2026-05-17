@@ -21,7 +21,7 @@
 - [x] Remove Cannon dependency | AC: `@react-three/cannon` is removed from `package.json`, `pnpm-lock.yaml` is refreshed, `rg "@react-three/cannon" package.json pnpm-lock.yaml src` returns no active dependency/import matches
 - [x] Update physics migration docs for completion | AC: `docs/physics-migration.md` states the project now uses `@react-three/rapier@2.2.0`, lists any behavior intentionally left equivalent rather than identical, removes obsolete instruction saying not to migrate in this pass
 - [x] Fix source compatibility from React 19 / R3F 9 / Three upgrade | AC: any type or API break caused by the stack upgrade is fixed without changing gameplay scope, `pnpm typecheck` passes
-- [ ] Build the migrated app | AC: `pnpm build` passes, build no longer reports missing Cannon modules, any remaining Three/Rapier warnings are recorded under Findings
+- [x] Build the migrated app | AC: `pnpm build` passes, build no longer reports missing Cannon modules, any remaining Three/Rapier warnings are recorded under Findings
 - [ ] Final verification for Rapier migration | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes, `rg "@react-three/cannon|useBox|useCylinder|usePlane|Triplet" src package.json` returns no Cannon runtime leftovers
 
 ## Findings
@@ -35,3 +35,4 @@
 - Rapier Express migration uses a dynamic zero-mass `RigidBody`, manual `CuboidCollider`, `setAdditionalMass(0/3)` for attached/animated/picked vs dropped grip physics, and keeps coffee state transitions inside the existing click/spring flow.
 - Rapier Mugs migration uses `InstancedRigidBodies` with manual `CuboidCollider` half extents `[0.05, 0.04, 0.05]`; selected instances are controlled through the rigid-body ref array for picked positioning and throw velocity.
 - Rapier Rain migration uses `InstancedRigidBodies` with a manual `CylinderCollider` args `[0.09, 0.08]`; the timer still respawns random can instances above the scene by setting their rigid-body translation.
+- Final migrated build passes without missing Cannon module reports or Three/Rapier warnings; the only remaining production build warning is Vite's existing large chunk warning for the bundled app chunk.
