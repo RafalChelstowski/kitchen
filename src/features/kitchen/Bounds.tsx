@@ -1,6 +1,9 @@
-import { useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
-import { CuboidCollider, RigidBody } from '@react-three/rapier';
+import {
+  CuboidCollider,
+  CylinderCollider,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
 
 import { GLTFResult } from '../../types';
@@ -48,20 +51,20 @@ function CylinderBoundary({ mesh }: { mesh: THREE.Mesh }) {
   const height = box.max.y - box.min.y;
   const { position, geometry, scale } = mesh;
 
-  const [ref] = useCylinder<THREE.Mesh>(() => ({
-    type: 'Static',
-    position: [...position.toArray()],
-    args: [radius, radius, height, 16],
-  }));
-
   return (
-    <mesh
-      name="static-cylinder"
-      ref={ref}
-      geometry={geometry}
-      material={material}
-      scale={scale}
-    />
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      position={[...position.toArray()]}
+    >
+      <CylinderCollider args={[height / 2, radius]} />
+      <mesh
+        name="static-cylinder"
+        geometry={geometry}
+        material={material}
+        scale={scale}
+      />
+    </RigidBody>
   );
 }
 
