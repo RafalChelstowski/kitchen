@@ -42,8 +42,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.6(react@19.2.6)
       react-toastify:
-        specifier: ^8.2.0
-        version: 8.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: ^11.1.0
+        version: 11.1.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react-use:
         specifier: ^17.1.0
         version: 17.6.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -911,8 +911,8 @@ packages:
     resolution: {integrity: sha512-n8fOixwDD6b/ObinzTrp1ZKFzbgvKZvuz/TvejnLn1aQfC6r52XEx85FmuC+3HI+JM7coBRXUvNqEU2PHVrHpg==}
     engines: {node: '>=8'}
 
-  clsx@1.2.1:
-    resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
+  clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
   code-excerpt@3.0.0:
@@ -1821,11 +1821,11 @@ packages:
     peerDependencies:
       react: ^17.0.2
 
-  react-toastify@8.2.0:
-    resolution: {integrity: sha512-Pg2Ju7NngAamarFvLwqrFomJ57u/Ay6i6zfLurt/qPynWkAkOthu6vxfqYpJCyNhHRhR4hu7+bySSeWWJu6PAg==}
+  react-toastify@11.1.0:
+    resolution: {integrity: sha512-e9h23x3phN0wbFeB6yovmWp7lobzV4CaCH0LO8nVP6H7Y+3GbcLpIzMm9dJhcp1RXbpyfvjgpfXqO80QAmn7sg==}
     peerDependencies:
-      react: '>=16'
-      react-dom: '>=16'
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
 
   react-universal-interface@0.6.2:
     resolution: {integrity: sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==}
@@ -3293,7 +3293,7 @@ snapshots:
       slice-ansi: 3.0.0
       string-width: 4.2.3
 
-  clsx@1.2.1: {}
+  clsx@2.1.1: {}
 
   code-excerpt@3.0.0:
     dependencies:
@@ -4211,9 +4211,9 @@ snapshots:
       react: 17.0.2
       scheduler: 0.20.2
 
-  react-toastify@8.2.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+  react-toastify@11.1.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
-      clsx: 1.2.1
+      clsx: 2.1.1
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
