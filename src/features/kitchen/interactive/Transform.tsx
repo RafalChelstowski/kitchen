@@ -18,6 +18,7 @@ import {
   InteractiveObjectStatus,
   PlayerStatus,
 } from '../../../types';
+import { createHeldItemPoseHelper } from '../heldItemPose';
 
 type PositionTuple = [number, number, number];
 type MugBodyType = 'dynamic' | 'kinematicPosition';
@@ -53,6 +54,7 @@ export function Transform(): JSX.Element {
   ) as unknown as GLTFResult;
   const bodyRef = useRef<RapierRigidBody>(null);
   const dummyRef = useRef<THREE.Group>(null);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
 
   const status = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.HIDDEN
@@ -176,8 +178,6 @@ export function Transform(): JSX.Element {
     }
   };
 
-  const zCamVec = new THREE.Vector3();
-  const rotationDirection = new THREE.Vector3();
   const bodyRotation = new THREE.Quaternion();
   const bodyEuler = new THREE.Euler();
 
@@ -245,18 +245,18 @@ export function Transform(): JSX.Element {
     }
 
     if (status.current === InteractiveObjectStatus.PICKED) {
-      zCamVec.set(0.15, -0.15, -0.4);
-      const position = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      rotationDirection.normalize();
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, yaw } = heldPoseHelperRef.current.compute(camera, [
+        0.15,
+        -0.15,
+        -0.4,
+      ]);
 
       setNextMugTransform(
         body,
         bodyRotation,
         bodyEuler,
         [position.x, position.y, position.z],
-        [0, theta + Math.PI, 0]
+        [0, yaw, 0]
       );
     }
 

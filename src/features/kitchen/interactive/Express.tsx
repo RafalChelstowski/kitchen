@@ -23,6 +23,7 @@ import {
   InteractiveObjectStatus,
   PlayerStatus,
 } from '../../../types';
+import { createHeldItemPoseHelper } from '../heldItemPose';
 import { useKitchenGltf } from '../useKitchenGltf';
 
 type PositionTuple = [number, number, number];
@@ -36,9 +37,6 @@ const grinderRotation: PositionTuple = [0, degToRad(-41), 0];
 
 const grinderTrayPosition: PositionTuple = [2.51, 0.91, -5.3];
 const tamperPosition: PositionTuple = [2.49, 0.93, -5.33];
-
-const zCamVec = new THREE.Vector3();
-const rotationDirection = new THREE.Vector3();
 
 function setNextGripTransform(
   body: RapierRigidBody,
@@ -81,6 +79,7 @@ export function Express(): JSX.Element {
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const tamperRef = useRef<THREE.Group>(null);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
   const gripPosRef = useRef<PositionTuple>(initialPosition);
   const gripRotRef = useRef<PositionTuple>([0, 0, 0]);
   const coffeePortionRef = useRef<THREE.Mesh>(null);
@@ -446,17 +445,18 @@ export function Express(): JSX.Element {
     }
 
     if (gripStatus.current === InteractiveObjectStatus.PICKED) {
-      zCamVec.set(0.15, -0.15, -0.3);
-      const playerPosition = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, yaw } = heldPoseHelperRef.current.compute(camera, [
+        0.15,
+        -0.15,
+        -0.3,
+      ]);
 
       setNextGripTransform(
         body,
         bodyQuaternion,
         bodyEuler,
-        [playerPosition.x, playerPosition.y, playerPosition.z],
-        [0, theta + Math.PI, 0]
+        [position.x, position.y, position.z],
+        [0, yaw, 0]
       );
     }
   });

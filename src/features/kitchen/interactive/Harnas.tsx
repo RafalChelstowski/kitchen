@@ -19,6 +19,7 @@ import {
   InteractiveObjectStatus,
   PlayerStatus,
 } from '../../../types';
+import { createHeldItemPoseHelper } from '../heldItemPose';
 
 type PositionTuple = [number, number, number];
 type HarnasBodyType = 'dynamic' | 'kinematicPosition';
@@ -55,17 +56,12 @@ function objectOrParentHasName(
 function setNextHarnasTransform(
   body: RapierRigidBody,
   quaternion: THREE.Quaternion,
-  euler: THREE.Euler,
-  position: PositionTuple,
-  rotation: PositionTuple
+  position: PositionTuple
 ) {
   const [x, y, z] = position;
-  const [rX, rY, rZ] = rotation;
 
   body.setNextKinematicTranslation({ x, y, z });
-  body.setNextKinematicRotation(
-    quaternion.setFromEuler(euler.set(rX, rY, rZ))
-  );
+  body.setNextKinematicRotation(quaternion);
 }
 
 export function Harnas(): JSX.Element {
@@ -76,6 +72,7 @@ export function Harnas(): JSX.Element {
   const { nodes, materials } = useGLTF('/can_uv.gltf') as unknown as GLTFResult;
   const bodyRef = useRef<RapierRigidBody>(null);
   const dummyRef = useRef<THREE.Mesh>(null);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
   const initialRotation = useRef<PositionTuple>([
     Math.random(),
     Math.random(),
@@ -169,8 +166,6 @@ export function Harnas(): JSX.Element {
     }
   };
 
-  const zCamVec = new THREE.Vector3();
-  const rotationDirection = new THREE.Vector3();
   const bodyRotation = new THREE.Quaternion();
   const bodyEuler = new THREE.Euler();
 
@@ -190,18 +185,15 @@ export function Harnas(): JSX.Element {
     }
 
     if (harnasStatus.current === InteractiveObjectStatus.PICKED) {
-      zCamVec.set(0.15, -0.15, -0.4);
-      const position = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      rotationDirection.normalize();
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, quaternion } = heldPoseHelperRef.current.compute(
+        camera,
+        [0.15, -0.15, -0.4]
+      );
 
       setNextHarnasTransform(
         body,
-        bodyRotation,
-        bodyEuler,
-        [position.x, position.y, position.z],
-        [0, theta + Math.PI, 0]
+        quaternion,
+        [position.x, position.y, position.z]
       );
     }
   });

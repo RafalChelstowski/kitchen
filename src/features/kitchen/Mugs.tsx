@@ -14,6 +14,7 @@ import * as THREE from 'three';
 
 import { getState, setState } from '../../store/store';
 import { GLTFResult, PlayerStatus } from '../../types';
+import { createHeldItemPoseHelper } from './heldItemPose';
 
 type PositionTuple = [number, number, number];
 type RotationTuple = [number, number, number];
@@ -36,8 +37,6 @@ interface Props {
   rowModifier?: number;
 }
 
-const zCamVec = new THREE.Vector3();
-const rotationDirection = new THREE.Vector3();
 const bodyEuler = new THREE.Euler();
 const bodyRotation = new THREE.Quaternion();
 
@@ -86,6 +85,7 @@ export function Mugs({
   const { rapier } = useRapier();
   const instanceId = useRef<number | undefined>(undefined);
   const bodiesRef = useRef<(RapierRigidBody | null)[]>([]);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
   const [bodyTypes, setBodyTypes] = useState<MugBodyType[]>(() =>
     Array.from({ length: itemsNumber }, () => 'dynamic')
   );
@@ -213,15 +213,15 @@ export function Mugs({
 
   useFrame(() => {
     if (instanceId.current !== undefined) {
-      zCamVec.set(0.15, -0.15, -0.4);
-      const position = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      rotationDirection.normalize();
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, yaw } = heldPoseHelperRef.current.compute(camera, [
+        0.15,
+        -0.15,
+        -0.4,
+      ]);
       const body = bodiesRef.current[instanceId.current];
 
       if (body) {
-        setNextMugTransform(body, position, theta + Math.PI);
+        setNextMugTransform(body, position, yaw);
       }
     }
   });
