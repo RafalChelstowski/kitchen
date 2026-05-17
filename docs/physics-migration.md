@@ -1,60 +1,53 @@
-# Physics Migration Inventory
+# Physics Migration Notes
 
-This file records the current `@react-three/cannon` usage before any Rapier
-migration work. It is an inventory only; physics behavior remains unchanged in
-this pass.
-
-## Rapier Migration Constraints
-
-- Target package for the future migration: `@react-three/rapier@2.2.0`.
-- The Rapier migration is a separate implementation pass. This modernization
-  pass must not upgrade, remove, or partially replace the current
-  `@react-three/cannon` runtime behavior.
-- Current verification commands for this pass: `pnpm typecheck`, `pnpm test`,
-  and `pnpm build`.
-
-## Future 3D Runtime Follow-Ups
-
-- `pnpm build` currently reports `[IMPORT_IS_UNDEFINED]` because
-  `three-mesh-bvh` reads `THREE.BatchedMesh`, but the installed `three` package
-  does not export `BatchedMesh`. Treat this as a future Three/Drei/BVH
-  dependency-alignment task; do not change physics behavior in this
-  modernization pass.
-- `pnpm build` currently reports the Vite large chunk warning after minification.
-  The generated app chunk is about 1.7 MB before gzip. Treat chunk splitting or
-  lazy-loading of heavy 3D runtime code as a separate performance follow-up.
+The project now uses `@react-three/rapier@2.2.0` for runtime physics. The
+previous `@react-three/cannon` dependency and source imports have been removed.
 
 ## Runtime Setup
 
-| Component | Cannon usage | Current role |
+- `src/App.tsx` wraps the scene in Rapier `Physics` with gravity
+  `[0, -2, 0]`.
+- Development physics debug rendering is provided through Rapier's `debug`
+  prop, alongside the existing Drei `Stats` view.
+- `src/App.test.tsx` mocks Rapier `Physics` so the smoke test still verifies
+  React rendering without loading the real physics world.
+
+## Migrated Bodies
+
+| Component | Rapier implementation | Preserved role |
 | --- | --- | --- |
-| `src/App.tsx` | `Physics` with `gravity={[0, -2, 0]}` | Creates the Cannon physics world for the scene. |
-| `src/App.tsx` | `Debug` in development builds | Wraps physics children with debug rendering and Drei `Stats`. |
+| `src/features/player/Player.tsx` | Dynamic `RigidBody` with manual cuboid collider, locked rotations, and direct linear velocity updates. | Pointer-lock movement drives horizontal velocity, the camera follows the body, and unlock resets velocity/rotation/mass behavior. |
+| `src/features/kitchen/Floor.tsx` | Fixed rigid body/collider. | Floor position and flat rotation match the previous scene collider. |
+| `src/features/kitchen/Bounds.tsx` `CubeBoundary` | Fixed cuboid collision built from GLTF mesh bounds. | Static cube bounds keep GLTF-derived transform and mesh names for raycast placement logic. |
+| `src/features/kitchen/Bounds.tsx` `CylinderBoundary` | Fixed cylinder collision built from GLTF mesh bounds. | Static cylinder bounds keep GLTF-derived position, radius, and height. |
+| `src/features/kitchen/Mugs.tsx` | `InstancedRigidBodies` with manual cuboid colliders. | Initial mug grid placement, selected-mug positioning while picked, and throw velocity are preserved. |
+| `src/features/kitchen/interactive/Express.tsx` | Dynamic zero-mass `RigidBody` with manual cuboid collider. | Pickup, drop, attached, animated, position, rotation, velocity, and coffee state transitions remain in the existing click/spring flow. |
+| `src/features/kitchen/interactive/Harnas.tsx` | Dynamic `RigidBody` with manual cylinder collider. | Hidden, picked, thrown, position, velocity, and rotation behavior remain equivalent; floor contact still unlocks `AchievementName.HARNAS`. |
+| `src/features/kitchen/interactive/Transform.tsx` | Dynamic zero-mass `RigidBody` with manual cylinder collider. | Hidden, picked, animated, attached, thrown, and reset behavior remain equivalent, including ready-coffee reset on low-height collision. |
+| `src/features/kitchen/interactive/Window.tsx` | Fixed/kinematic Rapier blocker collider. | Closed state restores the original blocker position; open state moves it out of the window path. |
+| `src/features/harnasie/Rain.tsx` | `InstancedRigidBodies` with manual cylinder colliders. | Falling can instances and timer-based respawn above the scene are preserved, even though the component is not mounted. |
 
-## Bodies
+## Intentional Equivalence Notes
 
-| Component | Cannon usage | Body shape/type | Motion role |
-| --- | --- | --- | --- |
-| `src/features/player/Player.tsx` | `useBox<Mesh>` | Box body, `args: [0.05, 1.2, 0.05]`, `type: 'Dynamic'`, starts with `mass: 0` | Player-controlled. Pointer-lock movement sets velocity each frame, switches mass to `3` while locked, and resets velocity/rotation/mass when unlocked. |
-| `src/features/kitchen/Floor.tsx` | `usePlane<Mesh>` | Plane body, `type: 'Static'`, rotated flat at `y = -4.5` | Static floor collider. |
-| `src/features/kitchen/Bounds.tsx` `CubeBoundary` | `useBox<THREE.Mesh>` | Box body from GLTF mesh bounds, `type: 'Static'` | Static environment collider for meshes whose names include `Cube`. |
-| `src/features/kitchen/Bounds.tsx` `CylinderBoundary` | `useCylinder<THREE.Mesh>` | Cylinder body from GLTF mesh bounds, `args: [radius, radius, height, 16]`, `type: 'Static'` | Static environment collider for meshes whose names include `Cylinder`. |
-| `src/features/kitchen/Mugs.tsx` | `useBox<InstancedMesh>` | Instanced box bodies, `args: [0.1, 0.08, 0.1]`, `type: 'Dynamic'`, `mass: 20` | Dynamic props. When a mug is picked, code drives its position/velocity/rotation from the camera, so the selected instance behaves kinematic-like and player-controlled until placed or thrown. |
-| `src/features/kitchen/interactive/Express.tsx` | `useBox<THREE.Group>` | Box body, `args: [0.1, 0.1, 0.2]`, `type: 'Dynamic'`, `mass: 0` | Kinematic-like espresso grip. Animation and pickup states drive position/rotation directly; dropped placement can set mass to `3`; attached/animated states set mass back to `0`. |
-| `src/features/kitchen/interactive/Harnas.tsx` | `useCylinder<Mesh>` | Cylinder body, `args: [0.06, 0.06, 0.14, 12]`, dynamic by mass, `mass: 1` | Dynamic can prop with player-controlled pickup/throw behavior. Hidden and picked states drive position/velocity directly; floor collision unlocks the Harnas achievement. |
-| `src/features/kitchen/interactive/Transform.tsx` | `useCylinder<THREE.Group>` | Cylinder body, `args: [0.05, 0.05, 0.1, 12]`, dynamic by mass, `mass: 1` | Kinematic-like transform mug. Hidden, picked, animated, and attached states drive position/rotation/velocity directly and often set mass to `0`; thrown/dropped states restore mass to `1`. |
-| `src/features/kitchen/interactive/Window.tsx` | `useBox<Mesh>` | Box body from `nodes.window_bound` dimensions, `type: 'Static'` | Static window collider that is repositioned upward when the window opens and restored when it closes. |
-| `src/features/harnasie/Rain.tsx` | `useCylinder<InstancedMesh>` | Instanced cylinder bodies, `args: [0.08, 0.08, 0.18, 5]`, dynamic by mass, `mass: 1` | Dynamic falling can bodies. A frame timer respawns random instances above the scene by setting their positions. The component is not currently mounted by `App.tsx`. |
+- Several previously mass-driven interactions now use Rapier rigid-body APIs
+  such as `setAdditionalMass`, `setLinvel`, and direct translation/rotation
+  updates. The goal is gameplay equivalence rather than identical internal
+  physics integration.
+- Picked or animated objects remain controlled by camera/spring state and are
+  released back to dynamic physics only when the existing gameplay flow does so.
+- Harnas floor collision checks both collider and rigid-body object ancestors
+  for the existing `floor` mesh name before unlocking the achievement, matching
+  the previous gameplay outcome while using Rapier event shapes.
+- Mug and rain colliders are manually sized to match the prior practical
+  collision volumes rather than deriving every detail from rendered geometry.
+- The large Vite app chunk warning remains a performance follow-up and is not a
+  physics migration behavior change.
 
-## Type-Only Usage
+## Verification
 
-| Component | Cannon usage | Notes |
-| --- | --- | --- |
-| `src/features/kitchen/interactive/Letters.tsx` | `Triplet` import | Uses Cannon's tuple type for spring animation positions; no Cannon body is created. |
-| `src/features/kitchen/Bounds.tsx`, `src/features/kitchen/Mugs.tsx`, `src/features/kitchen/interactive/Express.tsx`, `src/features/kitchen/interactive/Transform.tsx`, `src/features/player/Player.tsx` | `Triplet` import | Uses Cannon's tuple type for positions, dimensions, or rotations alongside runtime body hooks. |
+Required final migration gates:
 
-## Test Harness
-
-| File | Cannon usage | Notes |
-| --- | --- | --- |
-| `src/App.test.tsx` | Mocks `Physics` and `Debug` from `@react-three/cannon` | Keeps the app smoke test focused on React rendering without loading the real physics world. |
+- `corepack pnpm run typecheck`
+- `corepack pnpm run test`
+- `corepack pnpm run build`
+- No active `@react-three/cannon` runtime dependency or source imports remain.
