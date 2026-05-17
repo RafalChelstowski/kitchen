@@ -43,6 +43,10 @@
 - [x] Add achievement viewed unit test | AC: test verifies marking viewed changes status to VIEWED and keeps the original date
 - [x] Final dependency cleanup | AC: `package.json` contains no unused modernization leftovers identified by source search, removed packages have no remaining imports
 - [x] Final verification pass | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes
+- [ ] Restore intro overlay opacity | AC: home intro/menu overlay still uses a semi-transparent violet backdrop over the 3D canvas, and the source keeps the main menu content readable above that overlay
+- [ ] Normalize Settings page text color | AC: every visible Settings page label, heading, preset button, select, and option renders with white text or a white-on-control treatment; no Settings control keeps unintended black text
+- [ ] Keep achievement row text white during viewed transition | AC: NEW achievement rows no longer animate from green to white on hover/view; achievement row text remains white before and after `markAchievementViewed`
+- [ ] Run final UI polish verification | AC: `pnpm typecheck` passes, `pnpm test` passes, and `pnpm build` passes after the UI polish changes
 
 ---
 
