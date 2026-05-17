@@ -43,6 +43,16 @@ function setNextMugTransform(
   );
 }
 
+function syncMugBodyToTransform(
+  body: RapierRigidBody,
+  position: THREE.Vector3,
+  quaternion: THREE.Quaternion
+) {
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  body.setRotation(quaternion, true);
+}
+
 export function Transform(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
@@ -121,7 +131,7 @@ export function Transform(): JSX.Element {
         x[0].object.name.includes('express') &&
         getState().coffeeState === 'gripAttached'
       ) {
-        bodyRef.current?.setEnabled(true);
+        syncMugBodyToHeldVisual();
         status.current = InteractiveObjectStatus.ANIMATED;
         setMugBodyType('kinematicPosition');
         setIsMugHeld(false);
@@ -150,10 +160,13 @@ export function Transform(): JSX.Element {
         setMugBodyType('dynamic');
         bodyRef.current?.setEnabled(true);
         bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
-        bodyRef.current?.setTranslation(
-          { x: point.x, y: point.y + 0.2, z: point.z },
-          true
-        );
+        if (bodyRef.current) {
+          syncMugBodyToTransform(
+            bodyRef.current,
+            bodyPosition.set(point.x, point.y + 0.2, point.z),
+            bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0))
+          );
+        }
         bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
         bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
         status.current = undefined;
@@ -186,8 +199,32 @@ export function Transform(): JSX.Element {
 
   const bodyRotation = new THREE.Quaternion();
   const bodyEuler = new THREE.Euler();
+  const bodyPosition = new THREE.Vector3();
 
   const posRef = useRef<PositionTuple>([0, 0, 0]);
+
+  const syncMugBodyToHeldVisual = () => {
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
+    }
+
+    const { position, quaternion } = heldPoseHelperRef.current.compute(camera, [
+      0.15,
+      -0.15,
+      -0.4,
+    ]);
+    const heldMug = heldMugRef.current;
+    const syncPosition =
+      heldMug?.getWorldPosition(bodyPosition) ?? bodyPosition.copy(position);
+    const syncRotation =
+      heldMug?.getWorldQuaternion(bodyRotation) ??
+      bodyRotation.copy(quaternion);
+
+    syncMugBodyToTransform(body, syncPosition, syncRotation);
+    posRef.current = [syncPosition.x, syncPosition.y, syncPosition.z];
+  };
 
   const { aPosition } = useSpring({
     to: async (next) => {
@@ -299,18 +336,16 @@ export function Transform(): JSX.Element {
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
           setMugBodyType('dynamic');
-          bodyRef.current?.setEnabled(true);
           bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
+          syncMugBodyToHeldVisual();
           bodyRef.current?.setLinvel({ x, y, z }, true);
           bodyRef.current?.setAdditionalMass(1, true);
-          bodyRef.current?.setRotation(
-            bodyRotation.setFromEuler(
-              bodyEuler.set(
-                Math.random() * 3,
-                Math.random() * 3,
-                Math.random() * 3
-              )
-            ),
+          bodyRef.current?.setAngvel(
+            {
+              x: Math.random() * 3,
+              y: Math.random() * 3,
+              z: Math.random() * 3,
+            },
             true
           );
 
