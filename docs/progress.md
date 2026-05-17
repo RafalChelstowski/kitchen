@@ -3,7 +3,7 @@
 - [x] Clean generated build output before migration | AC: untracked `dist/` is removed or ignored, `git status --short` shows no generated build output, no source files are changed by this task
 - [x] Add Rapier and required React/Three stack versions | AC: `package.json` includes `@react-three/rapier@2.2.0`, `react`/`react-dom` are React 19 compatible, `@react-three/fiber` is 9.x compatible, `@react-three/drei` is 10.x compatible, `three` satisfies Rapier 2 peer range
 - [x] Refresh lockfile after stack install | AC: `pnpm-lock.yaml` matches `package.json`, `pnpm typecheck` runs far enough to report source errors instead of missing packages, `@react-three/cannon` remains installed for incremental migration
-- [ ] Update app test mocks for the new stack while Cannon remains | AC: existing `App.test.tsx` still mocks active physics imports, no new test framework or browser test infrastructure is added, `pnpm test` passes
+- [x] Update app test mocks for the new stack while Cannon remains | AC: existing `App.test.tsx` still mocks active physics imports, no new test framework or browser test infrastructure is added, `pnpm test` passes
 - [ ] Replace Cannon Triplet type-only usage in non-body code | AC: `Letters.tsx` no longer imports from `@react-three/cannon`, local tuple type is used for animation positions, `pnpm typecheck` passes
 - [ ] Replace Cannon Triplet type aliases in body components | AC: body components use a local tuple type or Three-compatible tuple type, no component imports `Triplet` from `@react-three/cannon`, `pnpm typecheck` passes
 - [ ] Switch the root physics provider to Rapier | AC: `App.tsx` imports `Physics` from `@react-three/rapier`, dev debug uses Rapier `debug={import.meta.env.DEV}` or equivalent, Cannon `Debug` is removed from `App.tsx`, existing app smoke test passes
@@ -27,3 +27,4 @@
 ## Findings
 
 - React 19/R3F 9 compile compatibility required a local global JSX bridge in `src/types/react-jsx-compat.d.ts`, updating legacy `planeBufferGeometry`/`boxBufferGeometry` JSX tags, and using `.js` suffixes for Three example imports under bundler module resolution.
+- App smoke tests still need the active Cannon `Physics`/`Debug` mock until `App.tsx` switches providers; a minimal Rapier mock is now present in `App.test.tsx` for the migration target.

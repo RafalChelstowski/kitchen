@@ -8,6 +8,13 @@ vi.mock('@react-three/cannon', () => ({
   Physics: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('@react-three/rapier', () => ({
+  CuboidCollider: () => null,
+  CylinderCollider: () => null,
+  Physics: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  RigidBody: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('@react-three/drei', () => ({
   AdaptiveDpr: () => null,
   Loader: () => null,
