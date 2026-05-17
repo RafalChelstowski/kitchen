@@ -129,7 +129,7 @@ export function Player(): JSX.Element {
       <pointerLockControls
         args={[camera, gl.domElement]}
         ref={controlsRef}
-        pointerSpeed={0.2}
+        pointerSpeed={3.5}
       />
       <RigidBody
         ref={bodyRef}
