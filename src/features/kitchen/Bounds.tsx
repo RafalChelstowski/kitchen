@@ -1,4 +1,4 @@
-import { Triplet, useBox, useCylinder } from '@react-three/cannon';
+import { useBox, useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -6,11 +6,12 @@ import { GLTFResult } from '../../types';
 
 const tBox = new THREE.Box3();
 const material = new THREE.MeshBasicMaterial({ visible: false });
+type PositionTuple = [number, number, number];
 
 function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
   const { position, geometry, scale, rotation } = mesh;
   const box = tBox.setFromObject(mesh);
-  const dimensions: Triplet = [
+  const dimensions: PositionTuple = [
     rotation.y === 0 ? box.max.x - box.min.x : (box.max.x - box.min.x) / 2,
     box.max.y - box.min.y,
     box.max.z - box.min.z,

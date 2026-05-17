@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { a, useSpring } from '@react-spring/three';
-import { Triplet, useBox } from '@react-three/cannon';
+import { useBox } from '@react-three/cannon';
 import * as THREE from 'three';
 import { Mesh } from 'three';
 
@@ -11,6 +11,7 @@ import { AchievementName } from '../../../types';
 import { useKitchenGltf } from '../useKitchenGltf';
 
 const { degToRad } = THREE.MathUtils;
+type PositionTuple = [number, number, number];
 
 export function InteractiveWindow(): JSX.Element {
   const { nodes, materials, kitchenMaterial } = useKitchenGltf();
@@ -26,12 +27,12 @@ export function InteractiveWindow(): JSX.Element {
 
   const initialPosition = useRef(position);
   const box = new THREE.Box3().setFromObject(nodes.window_bound);
-  const dimensions: Triplet = [
+  const dimensions: PositionTuple = [
     box.max.x - box.min.x,
     box.max.y - box.min.y,
     box.max.z - box.min.z,
   ];
-  const blockerPosition: Triplet = [
+  const blockerPosition: PositionTuple = [
     position.x,
     position.y,
     position.z,

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
 import { a, config, useSpring } from '@react-spring/three';
-import { Triplet, useBox } from '@react-three/cannon';
+import { useBox } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -20,14 +20,16 @@ import {
 } from '../../../types';
 import { useKitchenGltf } from '../useKitchenGltf';
 
-const initialPosition: Triplet = [1.65, 1.08, -5.44];
-const grinderPosition: Triplet = [2.49, 0.98, -5.52];
-const { degToRad } = THREE.MathUtils;
-const expressRotation: Triplet = [0, degToRad(-60), 0];
-const grinderRotation: Triplet = [0, degToRad(-41), 0];
+type PositionTuple = [number, number, number];
 
-const grinderTrayPosition: Triplet = [2.51, 0.91, -5.3];
-const tamperPosition: Triplet = [2.49, 0.93, -5.33];
+const initialPosition: PositionTuple = [1.65, 1.08, -5.44];
+const grinderPosition: PositionTuple = [2.49, 0.98, -5.52];
+const { degToRad } = THREE.MathUtils;
+const expressRotation: PositionTuple = [0, degToRad(-60), 0];
+const grinderRotation: PositionTuple = [0, degToRad(-41), 0];
+
+const grinderTrayPosition: PositionTuple = [2.51, 0.91, -5.3];
+const tamperPosition: PositionTuple = [2.49, 0.93, -5.33];
 
 const zCamVec = new THREE.Vector3();
 const rotationDirection = new THREE.Vector3();
@@ -346,8 +348,8 @@ export function Express(): JSX.Element {
 
   useFrame(() => {
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_EXPRESS) {
-      api.rotation.set(...(gripExpressRotation.get() as Triplet));
-      api.position.set(...(gripExpressPosition.get() as Triplet));
+      api.rotation.set(...(gripExpressRotation.get() as PositionTuple));
+      api.position.set(...(gripExpressPosition.get() as PositionTuple));
       api.mass.set(0);
     }
 

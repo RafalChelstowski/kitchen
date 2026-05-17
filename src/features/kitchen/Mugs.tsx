@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useEvent } from 'react-use';
 
-import { Triplet, useBox } from '@react-three/cannon';
+import { useBox } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import first from 'lodash/first';
@@ -11,8 +11,10 @@ import { InstancedMesh } from 'three';
 import { getState, setState } from '../../store/store';
 import { GLTFResult, PlayerStatus } from '../../types';
 
+type PositionTuple = [number, number, number];
+
 interface Props {
-  initialPosition: Triplet;
+  initialPosition: PositionTuple;
   objName: 'mugs' | 'mugs2' | 'ikeaGlass' | 'ikeaMug1' | 'ikeaMug2';
   geometryName: string;
   materialName: string;

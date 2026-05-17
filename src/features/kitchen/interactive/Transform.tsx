@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
 import { a, config, useSpring } from '@react-spring/three';
-import { Triplet, useCylinder } from '@react-three/cannon';
+import { useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -14,9 +14,11 @@ import {
   PlayerStatus,
 } from '../../../types';
 
-const HIDDEN_POSITION: Triplet = [0.2, 5.35, -3.8];
-const CUPBOARD_POSITION: Triplet = [-0.1, 0.63, -3.8];
-const EXPRESS_POSITION: Triplet = [1.66, 0.99, -5.43];
+type PositionTuple = [number, number, number];
+
+const HIDDEN_POSITION: PositionTuple = [0.2, 5.35, -3.8];
+const CUPBOARD_POSITION: PositionTuple = [-0.1, 0.63, -3.8];
+const EXPRESS_POSITION: PositionTuple = [1.66, 0.99, -5.43];
 
 export function Transform(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
@@ -208,7 +210,7 @@ export function Transform(): JSX.Element {
     }
 
     if (status.current === InteractiveObjectStatus.ANIMATED) {
-      api.position.set(...(aPosition.get() as Triplet));
+      api.position.set(...(aPosition.get() as PositionTuple));
       api.rotation.set(0, 0, 0);
       api.velocity.set(0, 0, 0);
       api.mass.set(0);

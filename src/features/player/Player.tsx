@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useEffectOnce, useEvent } from 'react-use';
 
-import { Triplet, useBox } from '@react-three/cannon';
+import { useBox } from '@react-three/cannon';
 import { extend, RootState, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Mesh } from 'three';
@@ -13,7 +13,9 @@ import { ControlsLock } from '../../types';
 
 extend({ PointerLockControls });
 
-const INITIAL_POSITION: Triplet = [0, 0.2, 1];
+type PositionTuple = [number, number, number];
+
+const INITIAL_POSITION: PositionTuple = [0, 0.2, 1];
 const SPEED = 3.5;
 
 const direction = new THREE.Vector3();
