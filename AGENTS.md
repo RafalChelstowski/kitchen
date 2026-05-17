@@ -7,23 +7,29 @@ IMPORTANT: If all items in docs/progress.md are marked [x], you MUST output <pro
 1. Read `docs/progress.md`
 2. If no `- [ ]` or `- [/]` items remain, output `<promise>RALPH_DOCS_PROGRESS_COMPLETE</promise>` and stop immediately
 3. Pick the first `- [ ]` or `- [/]` item
-4. Mark that item `[/]` before editing files
-5. Inspect the relevant source, tests, and existing docs before changing code
-6. Keep the change scoped to the selected checklist item and its acceptance criteria
-7. Implement only that item.
-8. Do not introduce new test frameworks, browser automation, or unrelated refactors for this feature-delivery loop
-9. Run `corepack pnpm run typecheck` and any narrower command required by the selected acceptance criteria
-10. If the selected item changes dependency manifests or lockfiles, run the needed `corepack pnpm` install command with the existing pnpm version
-11. If the selected item changes tests or test mocks, run `corepack pnpm run test`
+4. Read `## Findings` in `docs/progress.md` and reuse relevant discoveries
+5. Parse the item:
+   - Task description: everything before `|`
+   - Acceptance criteria: everything after `AC:`
+6. Determine mode:
+   - `[ ]` -> CREATE: implement from scratch
+   - `[/]` -> IMPROVE: read existing code, read Findings for this item, fix or enhance
+7. Implement only that item. If you uncover adjacent work, add a new `[ ]` item instead of widening scope. When removing or refactoring code, preserve existing safety checks unless the AC explicitly asks to remove them.
+8. This repo has existing tests. Do not add new test frameworks or test infrastructure; run existing tests only when the selected acceptance criteria require them
+9. Run `corepack pnpm run typecheck`
+10. If required commands fail, fix the task and rerun step 9 until the acceptance criteria and required checks pass
+11. Generated caches, build noise, and tool artifacts do not count as task progress. Do not mark `[x]` or commit if only unrelated/generated files changed.
 12. Mark the item `[x]` only when its acceptance criteria are satisfied
-13. If verification exposes pre-existing or follow-up issues outside the selected item, record them under `## Findings` in `docs/progress.md`
+13. Add brief notes to `## Findings` only when they reduce future loop risk
 14. Commit all changed files for the item together:
-    `git add AGENTS.md docs/progress.md package.json pnpm-lock.yaml src docs .gitignore && git commit -m "feat: advance Rapier migration"`
-15. End the iteration.
+    `git add -A && git commit -m "chore: <item-name>"`
+15. End the iteration. Output `<promise>RALPH_DOCS_PROGRESS_COMPLETE</promise>` only when step 2 triggered
 
 ## SUCCESS = REQUIRED GATES PASS
 
-The loop is complete only when every checklist item in `docs/progress.md` is marked `[x]`, the final verification item passes `corepack pnpm run typecheck`, `corepack pnpm run test`, and `corepack pnpm run build`, and no Cannon runtime leftovers remain in source or `package.json`.
+- `corepack pnpm run typecheck`
+- `corepack pnpm run test`
+- `corepack pnpm run build`
 
 ## Project Context
 
