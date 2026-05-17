@@ -10,7 +10,7 @@ import { degToRad } from 'three/src/math/MathUtils';
 
 // import { Smoke } from '../../../common/components/Smoke';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { glassMaterial } from '../../../common/materials/materials';
 import { getState, setState } from '../../../store/store';
 import {

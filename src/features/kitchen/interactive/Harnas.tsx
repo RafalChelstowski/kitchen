@@ -8,7 +8,7 @@ import { Mesh } from 'three';
 import * as THREE from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { getState, setState } from '../../../store/store';
 import {
   AchievementName,

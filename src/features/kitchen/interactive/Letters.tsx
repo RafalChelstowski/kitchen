@@ -6,7 +6,7 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { BufferGeometry, Material, Mesh } from 'three';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { getState, setState, subscribe } from '../../../store/store';
 import {
   AchievementName,

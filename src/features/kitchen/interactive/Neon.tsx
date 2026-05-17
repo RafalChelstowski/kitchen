@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { a, useSpring } from '@react-spring/three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { disabledNeonMaterial } from '../../../common/materials/materials';
 import { getState, useStore } from '../../../store/store';
 import { AchievementName } from '../../../types';

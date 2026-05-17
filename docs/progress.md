@@ -1,6 +1,6 @@
 # Feature Delivery Progress
 
-- [ ] Move achievement hook out of src/api | AC: `useAchievement` lives under a local feature/store path, all imports use the new path, and `src/api/hooks/useAchievement.ts` no longer exists
+- [x] Move achievement hook out of src/api | AC: `useAchievement` lives under a local feature/store path, all imports use the new path, and `src/api/hooks/useAchievement.ts` no longer exists
 - [ ] Delete remaining local auth API stub | AC: `src/api/index.ts` is removed, no `userApi` symbol remains, and source search for `userApi|doSign|doPassword|auth` under `src` returns no app-code matches
 - [ ] Remove obsolete auth route constants | AC: `src/features/Nav.tsx` exports only active routes, and `/signup`, `/signin`, `/signout`, `/account`, and `/pw-forget` no longer appear in source
 - [ ] Derive achievement total from catalog | AC: Achievements page has no hard-coded `achievementTotal = 9`, denominator comes from `achievementCatalog`, and existing tests still pass
