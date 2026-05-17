@@ -52,7 +52,7 @@
 - [x] Fix held-object placement raycasts against nested bounds | AC: held-object placement raycasts for Harnas, regular mugs, Express grip, and Transform mug use recursive intersection or an equivalent helper so nested `static-*` meshes inside Rapier `RigidBody` wrappers are hit, placement onto static bounds works for all held item types, held non-physics visuals remain excluded from placement/throw raycasts, `pnpm typecheck` passes
 - [x] Render transformed held Transform mug variant | AC: when `transformed` is true and the Transform mug is picked, the non-physics held visual renders the transformed mug meshes and ready coffee payload instead of disappearing, the normal untransformed held mug still renders correctly, `pnpm typecheck` passes
 - [x] Keep coffee payload visible on held Express grip | AC: when the Express grip is picked after grinding and `coffeePortion` scale is visible, the held grip visual carries the coffee payload with the handle instead of leaving it on the disabled body branch, existing attached/animated coffee workflow behavior is preserved, `pnpm typecheck` passes
-- [ ] Final review-comment regression pass | AC: Codex review cases are covered locally: held items can be placed on bounds after Rapier wrappers, transformed Transform mug remains visible while held, grinded Express grip shows coffee while held, `pnpm test -- --run` and `pnpm build` pass
+- [x] Final review-comment regression pass | AC: Codex review cases are covered locally: held items can be placed on bounds after Rapier wrappers, transformed Transform mug remains visible while held, grinded Express grip shows coffee while held, `pnpm test -- --run` and `pnpm build` pass
 
 ## Findings
 
