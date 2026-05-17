@@ -19,7 +19,7 @@
 - [x] Document Rapier migration constraints | AC: `docs/physics-migration.md` records target package `@react-three/rapier@2.2.0`, states that the Rapier migration is a separate pass, and lists current verification commands
 - [x] Remove Cannon version-update task from this pass | AC: `package.json` still uses the current Cannon package unless changed by another completed task, and no task in this pass attempts a partial Cannon upgrade
 - [x] Add build warning note for future 3D pass | AC: `docs/physics-migration.md` records the current `three-mesh-bvh`/`BatchedMesh` warning and large chunk warning as future 3D runtime follow-up items
-- [ ] Final cleanup verification | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes, and stale Firebase/auth matches are gone from app source
+- [x] Final cleanup verification | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes, and stale Firebase/auth matches are gone from app source
 
 ---
 
