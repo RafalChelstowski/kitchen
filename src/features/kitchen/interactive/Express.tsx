@@ -25,6 +25,7 @@ import {
 import { useKitchenGltf } from '../useKitchenGltf';
 
 type PositionTuple = [number, number, number];
+type GripBodyType = 'dynamic' | 'kinematicPosition';
 
 const initialPosition: PositionTuple = [1.65, 1.08, -5.44];
 const grinderPosition: PositionTuple = [2.49, 0.98, -5.52];
@@ -53,6 +54,8 @@ export function Express(): JSX.Element {
   const [animated, setAnimated] = useState<
     'express' | 'grinder' | 'accessories' | 'coffee' | null
   >(null);
+  const [gripBodyType, setGripBodyType] =
+    useState<GripBodyType>('kinematicPosition');
 
   const gripStatus = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.ATTACHED_EXPRESS
@@ -88,6 +91,7 @@ export function Express(): JSX.Element {
 
           setAnimated(null);
           gripStatus.current = InteractiveObjectStatus.ATTACHED_EXPRESS;
+          setGripBodyType('kinematicPosition');
           const [x, y, z] = initialPosition;
           bodyRef.current?.setTranslation({ x, y, z }, true);
           bodyRef.current?.setRotation(
@@ -134,6 +138,7 @@ export function Express(): JSX.Element {
 
         setAnimated(null);
         gripStatus.current = InteractiveObjectStatus.PICKED;
+        setGripBodyType('dynamic');
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'grinded',
@@ -201,6 +206,7 @@ export function Express(): JSX.Element {
 
         setAnimated(null);
         gripStatus.current = InteractiveObjectStatus.PICKED;
+        setGripBodyType('dynamic');
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'tempered',
@@ -241,6 +247,7 @@ export function Express(): JSX.Element {
         getState().coffeeState !== 'inProgress'
       ) {
         gripStatus.current = InteractiveObjectStatus.PICKED;
+        setGripBodyType('dynamic');
         setState({ playerStatus: PlayerStatus.PICKED });
 
         return;
@@ -274,6 +281,7 @@ export function Express(): JSX.Element {
 
       if (x[0] && x[0].distance < 2 && x[0].object.name.includes('express')) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_EXPRESS;
+        setGripBodyType('dynamic');
         setAnimated('express');
 
         await new Promise((res) => {
@@ -292,6 +300,7 @@ export function Express(): JSX.Element {
         getState().coffeeState === null
       ) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_GRINDER;
+        setGripBodyType('dynamic');
         setAnimated('grinder');
 
         await new Promise((res) => {
@@ -310,6 +319,7 @@ export function Express(): JSX.Element {
         getState().coffeeState === 'grinded'
       ) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_ACCESSORIES;
+        setGripBodyType('dynamic');
         setAnimated('accessories');
 
         await new Promise((res) => {
@@ -328,6 +338,7 @@ export function Express(): JSX.Element {
 
       if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
         const { point } = y[0];
+        setGripBodyType('dynamic');
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
@@ -366,15 +377,6 @@ export function Express(): JSX.Element {
         bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
         true
       );
-      body.setTranslation({ x, y, z }, true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
-    }
-
-    if (gripStatus.current === InteractiveObjectStatus.ATTACHED_EXPRESS) {
-      const [x, y, z] = initialPosition;
-      body.setRotation(bodyQuaternion.setFromEuler(bodyEuler.set(0, 0, 0)), true);
       body.setTranslation({ x, y, z }, true);
       body.setLinvel({ x: 0, y: 0, z: 0 }, true);
       body.setAngvel({ x: 0, y: 0, z: 0 }, true);
@@ -438,7 +440,7 @@ export function Express(): JSX.Element {
     <group dispose={null}>
       <RigidBody
         ref={bodyRef}
-        type="dynamic"
+        type={gripBodyType}
         colliders={false}
         mass={0}
         canSleep={false}
