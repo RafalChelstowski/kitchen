@@ -10,7 +10,6 @@ import {
 import { achievementCatalog } from './achievementCatalog';
 
 const cellClassName = 'p-6';
-const achievementTotal = 9;
 
 interface PlayerAchievementsProps {
   achievements: AchievementsType;
@@ -67,6 +66,7 @@ export function Achievements(): JSX.Element {
   const noAchievements = isEmpty(achievements);
 
   const achievementsDescriptions = achievementCatalog;
+  const achievementTotal = Object.keys(achievementCatalog).length;
   const isFetching = false;
 
   if (!achievementsDescriptions || noAchievements || isFetching) {
