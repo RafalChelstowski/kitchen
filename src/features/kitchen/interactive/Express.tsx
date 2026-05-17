@@ -54,6 +54,16 @@ function setNextGripTransform(
   );
 }
 
+function syncGripBodyToTransform(
+  body: RapierRigidBody,
+  position: THREE.Vector3,
+  quaternion: THREE.Quaternion
+) {
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  body.setRotation(quaternion, true);
+}
+
 export function Express(): JSX.Element {
   const { nodes, kitchenMaterial } = useKitchenGltf();
 
@@ -87,7 +97,44 @@ export function Express(): JSX.Element {
   const [isGripHeld, setIsGripHeld] = useState(false);
   const bodyQuaternion = new THREE.Quaternion();
   const bodyEuler = new THREE.Euler();
+  const bodyPosition = new THREE.Vector3();
   const readQuaternion = new THREE.Quaternion();
+
+  const holdGripFromCamera = () => {
+    gripStatus.current = InteractiveObjectStatus.PICKED;
+    setGripBodyType('kinematicPosition');
+    bodyRef.current?.setBodyType(
+      rapier.RigidBodyType.KinematicPositionBased,
+      true
+    );
+    bodyRef.current?.setEnabled(false);
+    setIsGripHeld(true);
+  };
+
+  const syncGripBodyToHeldVisual = () => {
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
+    }
+
+    const { position, quaternion } = heldPoseHelperRef.current.compute(camera, [
+      0.15,
+      -0.15,
+      -0.3,
+    ]);
+    const heldGrip = heldGripRef.current;
+    const syncPosition =
+      heldGrip?.getWorldPosition(bodyPosition) ?? bodyPosition.copy(position);
+    const syncRotation =
+      heldGrip?.getWorldQuaternion(bodyQuaternion) ??
+      bodyQuaternion.copy(quaternion);
+
+    syncGripBodyToTransform(body, syncPosition, syncRotation);
+    gripPosRef.current = [syncPosition.x, syncPosition.y, syncPosition.z];
+    bodyEuler.setFromQuaternion(syncRotation);
+    gripRotRef.current = [bodyEuler.x, bodyEuler.y, bodyEuler.z];
+  };
 
   const { rotation: gripExpressRotation, position: gripExpressPosition } =
     useSpring({
@@ -163,12 +210,7 @@ export function Express(): JSX.Element {
         await next({ position: tempGripPos });
 
         setAnimated(null);
-        gripStatus.current = InteractiveObjectStatus.PICKED;
-        setGripBodyType('kinematicPosition');
-        bodyRef.current?.setBodyType(
-          rapier.RigidBodyType.KinematicPositionBased,
-          true
-        );
+        holdGripFromCamera();
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'grinded',
@@ -235,12 +277,7 @@ export function Express(): JSX.Element {
         });
 
         setAnimated(null);
-        gripStatus.current = InteractiveObjectStatus.PICKED;
-        setGripBodyType('kinematicPosition');
-        bodyRef.current?.setBodyType(
-          rapier.RigidBodyType.KinematicPositionBased,
-          true
-        );
+        holdGripFromCamera();
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'tempered',
@@ -280,14 +317,7 @@ export function Express(): JSX.Element {
         getState().coffeeState !== 'cupReady' &&
         getState().coffeeState !== 'inProgress'
       ) {
-        gripStatus.current = InteractiveObjectStatus.PICKED;
-        setGripBodyType('kinematicPosition');
-        bodyRef.current?.setBodyType(
-          rapier.RigidBodyType.KinematicPositionBased,
-          true
-        );
-        bodyRef.current?.setEnabled(false);
-        setIsGripHeld(true);
+        holdGripFromCamera();
         setState({ playerStatus: PlayerStatus.PICKED });
 
         return;
@@ -320,9 +350,9 @@ export function Express(): JSX.Element {
       ]);
 
       if (x[0] && x[0].distance < 2 && x[0].object.name.includes('express')) {
+        syncGripBodyToHeldVisual();
         gripStatus.current = InteractiveObjectStatus.ANIMATED_EXPRESS;
         setGripBodyType('kinematicPosition');
-        bodyRef.current?.setEnabled(true);
         setIsGripHeld(false);
         setAnimated('express');
 
@@ -341,9 +371,9 @@ export function Express(): JSX.Element {
         x[0].object.name.includes('grinder') &&
         getState().coffeeState === null
       ) {
+        syncGripBodyToHeldVisual();
         gripStatus.current = InteractiveObjectStatus.ANIMATED_GRINDER;
         setGripBodyType('kinematicPosition');
-        bodyRef.current?.setEnabled(true);
         setIsGripHeld(false);
         setAnimated('grinder');
 
@@ -362,9 +392,9 @@ export function Express(): JSX.Element {
         x[0].object.name.includes('accessories') &&
         getState().coffeeState === 'grinded'
       ) {
+        syncGripBodyToHeldVisual();
         gripStatus.current = InteractiveObjectStatus.ANIMATED_ACCESSORIES;
         setGripBodyType('kinematicPosition');
-        bodyRef.current?.setEnabled(true);
         setIsGripHeld(false);
         setAnimated('accessories');
 
@@ -384,8 +414,8 @@ export function Express(): JSX.Element {
 
       if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
         const { point } = y[0];
+        syncGripBodyToHeldVisual();
         setGripBodyType('dynamic');
-        bodyRef.current?.setEnabled(true);
         bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
