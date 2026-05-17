@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
 import { a, config, useSpring } from '@react-spring/three';
-import { useBox } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
+import {
+  CuboidCollider,
+  RapierRigidBody,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
 
 // import { Smoke } from '../../../common/components/Smoke';
@@ -54,30 +58,14 @@ export function Express(): JSX.Element {
     InteractiveObjectStatus.ATTACHED_EXPRESS
   );
 
-  const [ref, api] = useBox<THREE.Group>(() => ({
-    mass: 0,
-    args: [0.1, 0.1, 0.2],
-    position: initialPosition,
-    allowSleep: false,
-    type: 'Dynamic',
-  }));
-
+  const bodyRef = useRef<RapierRigidBody>(null);
   const tamperRef = useRef<THREE.Group>(null);
-  const gripPosRef = useRef([0, 0, 0]);
-  const gripRotRef = useRef([0, 0, 0]);
+  const gripPosRef = useRef<PositionTuple>(initialPosition);
+  const gripRotRef = useRef<PositionTuple>([0, 0, 0]);
   const coffeePortionRef = useRef<THREE.Mesh>(null);
-
-  useEffect(() => {
-    api.position.subscribe((p) => {
-      gripPosRef.current = p;
-    });
-  });
-
-  useEffect(() => {
-    api.rotation.subscribe((r) => {
-      gripRotRef.current = r;
-    });
-  });
+  const bodyQuaternion = new THREE.Quaternion();
+  const bodyEuler = new THREE.Euler();
+  const readQuaternion = new THREE.Quaternion();
 
   const { rotation: gripExpressRotation, position: gripExpressPosition } =
     useSpring({
@@ -100,9 +88,15 @@ export function Express(): JSX.Element {
 
           setAnimated(null);
           gripStatus.current = InteractiveObjectStatus.ATTACHED_EXPRESS;
-          api.position.set(...initialPosition);
-          api.rotation.set(0, 0, 0);
-          api.mass.set(0);
+          const [x, y, z] = initialPosition;
+          bodyRef.current?.setTranslation({ x, y, z }, true);
+          bodyRef.current?.setRotation(
+            bodyQuaternion.setFromEuler(bodyEuler.set(0, 0, 0)),
+            true
+          );
+          bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+          bodyRef.current?.setAdditionalMass(0, true);
 
           if (getState().coffeeState === 'tempered') {
             setState({
@@ -334,8 +328,13 @@ export function Express(): JSX.Element {
 
       if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
         const { point } = y[0];
-        api.mass.set(3);
-        api.position.set(point.x, point.y + 0.2, point.z);
+        bodyRef.current?.setTranslation(
+          { x: point.x, y: point.y + 0.2, z: point.z },
+          true
+        );
+        bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAdditionalMass(3, true);
         gripStatus.current = undefined;
         await new Promise((res) => {
           setTimeout(res);
@@ -347,24 +346,52 @@ export function Express(): JSX.Element {
   });
 
   useFrame(() => {
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
+    }
+
+    const position = body.translation();
+    const rotation = body.rotation();
+    gripPosRef.current = [position.x, position.y, position.z];
+    readQuaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
+    bodyEuler.setFromQuaternion(readQuaternion);
+    gripRotRef.current = [bodyEuler.x, bodyEuler.y, bodyEuler.z];
+
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_EXPRESS) {
-      api.rotation.set(...(gripExpressRotation.get() as PositionTuple));
-      api.position.set(...(gripExpressPosition.get() as PositionTuple));
-      api.mass.set(0);
+      const [rX, rY, rZ] = gripExpressRotation.get() as PositionTuple;
+      const [x, y, z] = gripExpressPosition.get() as PositionTuple;
+      body.setRotation(
+        bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
+        true
+      );
+      body.setTranslation({ x, y, z }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAdditionalMass(0, true);
     }
 
     if (gripStatus.current === InteractiveObjectStatus.ATTACHED_EXPRESS) {
-      api.rotation.set(0, 0, 0);
-      api.velocity.set(0, 0, 0);
-      api.mass.set(0);
+      const [x, y, z] = initialPosition;
+      body.setRotation(bodyQuaternion.setFromEuler(bodyEuler.set(0, 0, 0)), true);
+      body.setTranslation({ x, y, z }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAdditionalMass(0, true);
     }
 
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_GRINDER) {
       const [rX, rY, rZ] = gripGrinderRotation.get();
       const [pX, pY, pZ] = gripGrinderPosition.get();
-      api.rotation.set(rX, rY, rZ);
-      api.position.set(pX, pY, pZ);
-      api.mass.set(0);
+      body.setRotation(
+        bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
+        true
+      );
+      body.setTranslation({ x: pX, y: pY, z: pZ }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAdditionalMass(0, true);
       coffeePortionRef.current?.scale.set(
         scale.get(),
         scale.get(),
@@ -376,9 +403,14 @@ export function Express(): JSX.Element {
       const [rX, rY, rZ] = accGrinderRotation.get();
       const [pX, pY, pZ] = accGrinderPosition.get();
       const [tpX, tpY, tpZ] = tamperAnimationPos.get();
-      api.rotation.set(rX, rY, rZ);
-      api.position.set(pX, pY, pZ);
-      api.mass.set(0);
+      body.setRotation(
+        bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
+        true
+      );
+      body.setTranslation({ x: pX, y: pY, z: pZ }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAdditionalMass(0, true);
       tamperRef.current?.position.set(tpX, tpY, tpZ);
     }
 
@@ -388,32 +420,50 @@ export function Express(): JSX.Element {
       camera.getWorldDirection(rotationDirection);
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
 
-      api.position.set(...playerPosition.toArray());
-      api.mass.set(0);
-      api.rotation.set(0, theta + Math.PI, 0);
+      body.setTranslation(
+        { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+        true
+      );
+      body.setRotation(
+        bodyQuaternion.setFromEuler(bodyEuler.set(0, theta + Math.PI, 0)),
+        true
+      );
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAdditionalMass(0, true);
     }
   });
 
   return (
     <group dispose={null}>
-      <a.group name="int-grip" ref={ref}>
-        <mesh
-          castShadow
-          name="grip-body"
-          geometry={accNodes.kolba.geometry}
-          material={accMaterials.coffeeAccMaterial}
-        />
-        <mesh
-          scale={0}
-          ref={coffeePortionRef}
-          geometry={accNodes.coffeePortion.geometry}
-          material={accMaterials.coffeeAccMaterial}
-        />
-        <mesh name="grip-dummy" visible={false}>
-          <meshStandardMaterial />
-          <boxGeometry args={[0.1, 0.15, 0.3]} />
-        </mesh>
-      </a.group>
+      <RigidBody
+        ref={bodyRef}
+        type="dynamic"
+        colliders={false}
+        mass={0}
+        canSleep={false}
+        position={initialPosition}
+      >
+        <CuboidCollider args={[0.05, 0.05, 0.1]} />
+        <a.group name="int-grip">
+          <mesh
+            castShadow
+            name="grip-body"
+            geometry={accNodes.kolba.geometry}
+            material={accMaterials.coffeeAccMaterial}
+          />
+          <mesh
+            scale={0}
+            ref={coffeePortionRef}
+            geometry={accNodes.coffeePortion.geometry}
+            material={accMaterials.coffeeAccMaterial}
+          />
+          <mesh name="grip-dummy" visible={false}>
+            <meshStandardMaterial />
+            <boxGeometry args={[0.1, 0.15, 0.3]} />
+          </mesh>
+        </a.group>
+      </RigidBody>
       <group name="express">
         <mesh
           geometry={nodes.bake_express.geometry}
