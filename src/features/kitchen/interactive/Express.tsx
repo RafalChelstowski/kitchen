@@ -39,6 +39,22 @@ const tamperPosition: PositionTuple = [2.49, 0.93, -5.33];
 const zCamVec = new THREE.Vector3();
 const rotationDirection = new THREE.Vector3();
 
+function setNextGripTransform(
+  body: RapierRigidBody,
+  quaternion: THREE.Quaternion,
+  euler: THREE.Euler,
+  position: PositionTuple,
+  rotation: PositionTuple
+) {
+  const [x, y, z] = position;
+  const [rX, rY, rZ] = rotation;
+
+  body.setNextKinematicTranslation({ x, y, z });
+  body.setNextKinematicRotation(
+    quaternion.setFromEuler(euler.set(rX, rY, rZ))
+  );
+}
+
 export function Express(): JSX.Element {
   const { nodes, kitchenMaterial } = useKitchenGltf();
 
@@ -92,12 +108,19 @@ export function Express(): JSX.Element {
           setAnimated(null);
           gripStatus.current = InteractiveObjectStatus.ATTACHED_EXPRESS;
           setGripBodyType('kinematicPosition');
-          const [x, y, z] = initialPosition;
-          bodyRef.current?.setTranslation({ x, y, z }, true);
-          bodyRef.current?.setRotation(
-            bodyQuaternion.setFromEuler(bodyEuler.set(0, 0, 0)),
-            true
-          );
+          if (bodyRef.current) {
+            setNextGripTransform(
+              bodyRef.current,
+              bodyQuaternion,
+              bodyEuler,
+              [
+                initialPosition[0],
+                initialPosition[1],
+                initialPosition[2],
+              ],
+              [0, 0, 0]
+            );
+          }
           bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
           bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
           bodyRef.current?.setAdditionalMass(0, true);
@@ -281,7 +304,7 @@ export function Express(): JSX.Element {
 
       if (x[0] && x[0].distance < 2 && x[0].object.name.includes('express')) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_EXPRESS;
-        setGripBodyType('dynamic');
+        setGripBodyType('kinematicPosition');
         setAnimated('express');
 
         await new Promise((res) => {
@@ -300,7 +323,7 @@ export function Express(): JSX.Element {
         getState().coffeeState === null
       ) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_GRINDER;
-        setGripBodyType('dynamic');
+        setGripBodyType('kinematicPosition');
         setAnimated('grinder');
 
         await new Promise((res) => {
@@ -319,7 +342,7 @@ export function Express(): JSX.Element {
         getState().coffeeState === 'grinded'
       ) {
         gripStatus.current = InteractiveObjectStatus.ANIMATED_ACCESSORIES;
-        setGripBodyType('dynamic');
+        setGripBodyType('kinematicPosition');
         setAnimated('accessories');
 
         await new Promise((res) => {
@@ -371,29 +394,23 @@ export function Express(): JSX.Element {
     gripRotRef.current = [bodyEuler.x, bodyEuler.y, bodyEuler.z];
 
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_EXPRESS) {
-      const [rX, rY, rZ] = gripExpressRotation.get() as PositionTuple;
-      const [x, y, z] = gripExpressPosition.get() as PositionTuple;
-      body.setRotation(
-        bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
-        true
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        gripExpressPosition.get() as PositionTuple,
+        gripExpressRotation.get() as PositionTuple
       );
-      body.setTranslation({ x, y, z }, true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
     }
 
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_GRINDER) {
-      const [rX, rY, rZ] = gripGrinderRotation.get();
-      const [pX, pY, pZ] = gripGrinderPosition.get();
-      body.setRotation(
-        bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
-        true
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        gripGrinderPosition.get() as PositionTuple,
+        gripGrinderRotation.get() as PositionTuple
       );
-      body.setTranslation({ x: pX, y: pY, z: pZ }, true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
       coffeePortionRef.current?.scale.set(
         scale.get(),
         scale.get(),
@@ -402,17 +419,14 @@ export function Express(): JSX.Element {
     }
 
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_ACCESSORIES) {
-      const [rX, rY, rZ] = accGrinderRotation.get();
-      const [pX, pY, pZ] = accGrinderPosition.get();
       const [tpX, tpY, tpZ] = tamperAnimationPos.get();
-      body.setRotation(
-        bodyQuaternion.setFromEuler(bodyEuler.set(rX, rY, rZ)),
-        true
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        accGrinderPosition.get() as PositionTuple,
+        accGrinderRotation.get() as PositionTuple
       );
-      body.setTranslation({ x: pX, y: pY, z: pZ }, true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
       tamperRef.current?.position.set(tpX, tpY, tpZ);
     }
 
