@@ -12,7 +12,7 @@ Main goal of the project was to strenghten my skills with react, three.js, react
 - there are hidden tasks - "achievements", that are unlocked through some interactions;
 - some interactions unlock other interactions;
 - I did not want to make interaction obvious - no "witcher senses", it is moderately difficult to find all achievements;
-- player is able to create an account and save the progress (google firebase auth). It is also possible to see how many achievements other players got;
+- player progress is saved locally in the browser;
 
 ## Model
 
@@ -31,6 +31,5 @@ Then I basically recreated everything in Blender and textured in Substance Desig
 From Blender I've exported 4k baked textures with lights/shadows + normals/metallic/roughness. Then it was really easy to create scene with gltfjsx, moving interactive parts to separate components. 
 
 ![blender](https://user-images.githubusercontent.com/58270768/179422874-efe1aa86-cdeb-4532-ad69-35ac39c27377.jpg)
-
 
 
