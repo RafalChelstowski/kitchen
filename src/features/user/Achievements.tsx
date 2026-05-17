@@ -46,8 +46,8 @@ export function PlayerAchievements({
             }}
             key={k}
             className={`flex flex-row font-semibold text-lg transition-colors duration-1000 ${
-              isNew ? 'text-tGreen' : 'text-white'
-            }`}
+              isNew ? 'bg-tGreen/20' : 'bg-transparent'
+            } text-white`}
           >
             <div className={`w-1/6 ${cellClassName}`}>{`${i + 1}.`}</div>
             <div className={`w-1/6 font-black ${cellClassName}`}>
