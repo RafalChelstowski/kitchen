@@ -46,7 +46,7 @@
 - [x] Restore intro overlay opacity | AC: home intro/menu overlay still uses a semi-transparent violet backdrop over the 3D canvas, and the source keeps the main menu content readable above that overlay
 - [x] Normalize Settings page text color | AC: every visible Settings page label, heading, preset button, select, and option renders with white text or a white-on-control treatment; no Settings control keeps unintended black text
 - [x] Keep achievement row text white during viewed transition | AC: NEW achievement rows no longer animate from green to white on hover/view; achievement row text remains white before and after `markAchievementViewed`
-- [ ] Run final UI polish verification | AC: `pnpm typecheck` passes, `pnpm test` passes, and `pnpm build` passes after the UI polish changes
+- [x] Run final UI polish verification | AC: `pnpm typecheck` passes, `pnpm test` passes, and `pnpm build` passes after the UI polish changes
 
 ---
 
