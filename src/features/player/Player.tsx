@@ -1,10 +1,13 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { useEffectOnce, useEvent } from 'react-use';
 
-import { useBox } from '@react-three/cannon';
 import { extend, RootState, useFrame, useThree } from '@react-three/fiber';
+import {
+  CuboidCollider,
+  RapierRigidBody,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
-import { Mesh } from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
 import { useControls, useControlsStore } from '../../common/hooks/useControls';
@@ -22,10 +25,11 @@ const direction = new THREE.Vector3();
 const frontVector = new THREE.Vector3();
 const sideVector = new THREE.Vector3();
 const cameraPosition = new THREE.Vector3();
+const playerRotation = new THREE.Quaternion();
 
 export function Player(): JSX.Element {
   const controlsRef = useRef<ControlsLock>(null);
-  const velocityRef = useRef([0, 0, 0]);
+  const bodyRef = useRef<RapierRigidBody>(null);
 
   const { toggleIsLocked } = useStore((state) => ({
     toggleIsLocked: state.toggleIsLocked,
@@ -37,13 +41,6 @@ export function Player(): JSX.Element {
   const get = useThree((state) => state.get);
   useControls();
 
-  const [ref, api] = useBox<Mesh>(() => ({
-    args: [0.05, 1.2, 0.05],
-    mass: 0,
-    type: 'Dynamic',
-    position: INITIAL_POSITION,
-  }));
-
   useLayoutEffect(() => {
     if (!controlsRef.current?.isLocked) {
       camera.position.set(0, 1.5, 0);
@@ -51,14 +48,6 @@ export function Player(): JSX.Element {
       camera.updateProjectionMatrix();
     }
   }, [camera]);
-
-  useEffect(() => {
-    if (controlsRef.current?.isLocked) {
-      api.velocity.subscribe((v) => {
-        velocityRef.current = v;
-      });
-    }
-  }, [api.velocity, api.position]);
 
   useEffectOnce(() => {
     const oldComputeOffsets = get().events.compute;
@@ -99,15 +88,16 @@ export function Player(): JSX.Element {
     const isMoving =
       controlsUp || controlsDown || controlsLeft || controlsRight;
 
-    if (ref.current && controlsRef.current?.isLocked) {
-      api.mass.set(3);
+    const body = bodyRef.current;
+    if (body && controlsRef.current?.isLocked) {
+      body.setAdditionalMass(3, true);
+      const position = body.translation();
+      const velocity = body.linvel();
       state.camera.position.copy(
         cameraPosition.set(
-          ref.current.position.x,
-          ref.current.position.y > 0.65
-            ? ref.current.position.y + 0.4
-            : ref.current.position.y + 0.9,
-          ref.current.position.z
+          position.x,
+          position.y > 0.65 ? position.y + 0.4 : position.y + 0.9,
+          position.z
         )
       );
       frontVector.set(0, 0, Number(controlsDown) - Number(controlsUp));
@@ -118,18 +108,19 @@ export function Player(): JSX.Element {
         .multiplyScalar(SPEED)
         .applyEuler(camera.rotation);
 
-      api.velocity.set(
-        direction.x,
-        ref.current.position.y > 0.65 && isMoving ? -1 : velocityRef.current[1],
-        direction.z
+      body.setLinvel(
+        {
+          x: direction.x,
+          y: position.y > 0.65 && isMoving ? -1 : velocity.y,
+          z: direction.z,
+        },
+        true
       );
-      api.rotation.set(0, 0, 0);
-
-      ref.current.getWorldPosition(ref.current.position);
+      body.setRotation(playerRotation, true);
     } else {
-      api.velocity.set(0, 0, 0);
-      api.rotation.set(0, 0, 0);
-      api.mass.set(0);
+      body?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body?.setRotation(playerRotation, true);
+      body?.setAdditionalMass(0, true);
     }
   });
 
@@ -140,7 +131,17 @@ export function Player(): JSX.Element {
         ref={controlsRef}
         pointerSpeed={0.2}
       />
-      <mesh ref={ref} />
+      <RigidBody
+        ref={bodyRef}
+        type="dynamic"
+        colliders={false}
+        position={INITIAL_POSITION}
+        mass={0}
+        lockRotations
+      >
+        <CuboidCollider args={[0.025, 0.6, 0.025]} />
+        <mesh />
+      </RigidBody>
     </>
   );
 }
