@@ -16,7 +16,7 @@ import * as THREE from 'three';
 
 import { useAchievement } from '../../user/useAchievement';
 import { glassMaterial } from '../../../common/materials/materials';
-import { getState, setState } from '../../../store/store';
+import { getState, setState, useStore } from '../../../store/store';
 import {
   AchievementName,
   GLTFResult,
@@ -75,6 +75,7 @@ export function Express(): JSX.Element {
   const camera = useThree((state) => state.camera);
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
+  const coffeeState = useStore((state) => state.coffeeState);
   const { addAchievement } = useAchievement();
   const { rapier } = useRapier();
 
@@ -100,6 +101,8 @@ export function Express(): JSX.Element {
   const bodyEuler = new THREE.Euler();
   const bodyPosition = new THREE.Vector3();
   const readQuaternion = new THREE.Quaternion();
+  const hasCoffeePayload =
+    coffeeState === 'grinded' || coffeeState === 'tempered';
 
   const holdGripFromCamera = () => {
     gripStatus.current = InteractiveObjectStatus.PICKED;
@@ -515,6 +518,7 @@ export function Express(): JSX.Element {
           />
           <mesh
             scale={0}
+            visible={!isGripHeld}
             ref={coffeePortionRef}
             geometry={accNodes.coffeePortion.geometry}
             material={accMaterials.coffeeAccMaterial}
@@ -535,6 +539,11 @@ export function Express(): JSX.Element {
           castShadow
           name="grip-body-held"
           geometry={accNodes.kolba.geometry}
+          material={accMaterials.coffeeAccMaterial}
+        />
+        <mesh
+          visible={hasCoffeePayload}
+          geometry={accNodes.coffeePortion.geometry}
           material={accMaterials.coffeeAccMaterial}
         />
       </group>
