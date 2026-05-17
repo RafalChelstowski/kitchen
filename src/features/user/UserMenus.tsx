@@ -15,8 +15,9 @@ export function UserMenus(): JSX.Element | null {
   }
 
   return (
-    <main className="flex absolute w-screen h-screen justify-center z-50 top-0 left-0 bg-tViolet bg-opacity-70 overflow-hidden">
-      <div className="container mx-auto flex flex-row p-6">
+    <main className="flex absolute w-screen h-screen justify-center z-50 top-0 left-0 overflow-hidden">
+      <div className="absolute inset-0 bg-tViolet/70" aria-hidden="true" />
+      <div className="container mx-auto flex flex-row p-6 relative z-10">
         <div className="w-1/3 flex">
           <Nav />
         </div>
