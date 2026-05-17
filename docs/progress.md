@@ -22,7 +22,7 @@
 - [x] Update physics migration docs for completion | AC: `docs/physics-migration.md` states the project now uses `@react-three/rapier@2.2.0`, lists any behavior intentionally left equivalent rather than identical, removes obsolete instruction saying not to migrate in this pass
 - [x] Fix source compatibility from React 19 / R3F 9 / Three upgrade | AC: any type or API break caused by the stack upgrade is fixed without changing gameplay scope, `pnpm typecheck` passes
 - [x] Build the migrated app | AC: `pnpm build` passes, build no longer reports missing Cannon modules, any remaining Three/Rapier warnings are recorded under Findings
-- [ ] Final verification for Rapier migration | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes, `rg "@react-three/cannon|useBox|useCylinder|usePlane|Triplet" src package.json` returns no Cannon runtime leftovers
+- [x] Final verification for Rapier migration | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes, `rg "@react-three/cannon|useBox|useCylinder|usePlane|Triplet" src package.json` returns no Cannon runtime leftovers
 
 ## Findings
 
