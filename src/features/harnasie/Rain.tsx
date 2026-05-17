@@ -18,7 +18,7 @@ export function Rain({ num }: { num: number }): JSX.Element {
   }));
 
   const prevTime = useRef(0);
-  const currentTime = useRef<number>();
+  const currentTime = useRef<number>(undefined);
 
   useFrame(({ clock }) => {
     currentTime.current = clock.getElapsedTime();

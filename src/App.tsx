@@ -52,7 +52,6 @@ export function App(): JSX.Element {
       <Canvas
         gl={{
           powerPreference: 'high-performance',
-          physicallyCorrectLights: true,
         }}
         camera={{ fov: 50 }}
         shadows

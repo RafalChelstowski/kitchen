@@ -409,7 +409,7 @@ export function Express(): JSX.Element {
         />
         <mesh name="grip-dummy" visible={false}>
           <meshStandardMaterial />
-          <boxBufferGeometry args={[0.1, 0.15, 0.3]} />
+          <boxGeometry args={[0.1, 0.15, 0.3]} />
         </mesh>
       </a.group>
       <group name="express">

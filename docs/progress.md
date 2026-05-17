@@ -1,7 +1,7 @@
 # Feature: Kitchen Rapier Migration
 
 - [x] Clean generated build output before migration | AC: untracked `dist/` is removed or ignored, `git status --short` shows no generated build output, no source files are changed by this task
-- [ ] Add Rapier and required React/Three stack versions | AC: `package.json` includes `@react-three/rapier@2.2.0`, `react`/`react-dom` are React 19 compatible, `@react-three/fiber` is 9.x compatible, `@react-three/drei` is 10.x compatible, `three` satisfies Rapier 2 peer range
+- [x] Add Rapier and required React/Three stack versions | AC: `package.json` includes `@react-three/rapier@2.2.0`, `react`/`react-dom` are React 19 compatible, `@react-three/fiber` is 9.x compatible, `@react-three/drei` is 10.x compatible, `three` satisfies Rapier 2 peer range
 - [ ] Refresh lockfile after stack install | AC: `pnpm-lock.yaml` matches `package.json`, `pnpm typecheck` runs far enough to report source errors instead of missing packages, `@react-three/cannon` remains installed for incremental migration
 - [ ] Update app test mocks for the new stack while Cannon remains | AC: existing `App.test.tsx` still mocks active physics imports, no new test framework or browser test infrastructure is added, `pnpm test` passes
 - [ ] Replace Cannon Triplet type-only usage in non-body code | AC: `Letters.tsx` no longer imports from `@react-three/cannon`, local tuple type is used for animation positions, `pnpm typecheck` passes
@@ -23,3 +23,7 @@
 - [ ] Fix source compatibility from React 19 / R3F 9 / Three upgrade | AC: any type or API break caused by the stack upgrade is fixed without changing gameplay scope, `pnpm typecheck` passes
 - [ ] Build the migrated app | AC: `pnpm build` passes, build no longer reports missing Cannon modules, any remaining Three/Rapier warnings are recorded under Findings
 - [ ] Final verification for Rapier migration | AC: `pnpm typecheck` passes, `pnpm test` passes, `pnpm build` passes, `rg "@react-three/cannon|useBox|useCylinder|usePlane|Triplet" src package.json` returns no Cannon runtime leftovers
+
+## Findings
+
+- React 19/R3F 9 compile compatibility required a local global JSX bridge in `src/types/react-jsx-compat.d.ts`, updating legacy `planeBufferGeometry`/`boxBufferGeometry` JSX tags, and using `.js` suffixes for Three example imports under bundler module resolution.

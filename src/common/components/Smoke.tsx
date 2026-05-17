@@ -17,7 +17,7 @@ interface SmokeProps {
 
 export function Smoke({ isVisible }: SmokeProps): JSX.Element {
   const tempObject = useMemo(() => new Object3D(), []);
-  const ref = useRef<InstancedMesh>();
+  const ref = useRef<InstancedMesh>(null);
   const texture = useTexture('/smoke.png');
 
   const particles = useMemo(() => {
@@ -73,7 +73,7 @@ export function Smoke({ isVisible }: SmokeProps): JSX.Element {
       }
       args={[undefined, undefined, 15]}
     >
-      <planeBufferGeometry args={[0.3, 0.3]} />
+      <planeGeometry args={[0.3, 0.3]} />
       <meshLambertMaterial
         side={DoubleSide}
         map={texture}

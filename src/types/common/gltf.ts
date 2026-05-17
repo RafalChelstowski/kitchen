@@ -1,4 +1,5 @@
-import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import * as THREE from 'three';
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export type GLTFResult = GLTF & {
   nodes: Record<string, THREE.Mesh>;

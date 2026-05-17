@@ -31,10 +31,15 @@ export function InteractiveWindow(): JSX.Element {
     box.max.y - box.min.y,
     box.max.z - box.min.z,
   ];
+  const blockerPosition: Triplet = [
+    position.x,
+    position.y,
+    position.z,
+  ];
 
   const [ref, api] = useBox<Mesh>(() => ({
     type: 'Static',
-    position: [...position.toArray()],
+    position: blockerPosition,
     args: dimensions,
   }));
 
