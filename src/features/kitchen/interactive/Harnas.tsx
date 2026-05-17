@@ -26,6 +26,8 @@ type HarnasBodyType = 'dynamic' | 'kinematicPosition';
 const HIDDEN_POSITION: PositionTuple = [2.85, 5, -3.7];
 const INITIAL_POSITION: PositionTuple = [0, 1, 0];
 const FRIDGE_POSITION: PositionTuple = [3.0, 0.63, -3.63];
+const THROW_FORWARD_SPEED = 13;
+const THROW_UPWARD_VELOCITY = 2;
 const { degToRad } = THREE.MathUtils;
 
 function objectOrParentHasName(
@@ -206,32 +208,32 @@ export function Harnas(): JSX.Element {
 
     if (key === ' ') {
       if (harnasStatus.current === InteractiveObjectStatus.PICKED) {
-        const camPosition = new THREE.Vector3();
-        const position = camera.getWorldPosition(camPosition);
         const target = new THREE.Vector3();
-        const targetMesh = raycaster.intersectObjects(scene.children)?.[0];
+        camera.getWorldDirection(target);
+        target.normalize().multiplyScalar(THROW_FORWARD_SPEED);
 
-        if (targetMesh) {
-          const distance = position.distanceTo(targetMesh.point);
-          camera.getWorldDirection(target);
-          const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 15));
-
-          setHarnasBodyType('dynamic');
-          bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
-          bodyRef.current?.setLinvel({ x, y, z }, true);
-          bodyRef.current?.setRotation(
-            bodyRotation.setFromEuler(
-              bodyEuler.set(
-                Math.random() * 3,
-                Math.random() * 3,
-                Math.random() * 3
-              )
-            ),
-            true
-          );
-          setState({ playerStatus: null });
-          harnasStatus.current = undefined;
-        }
+        setHarnasBodyType('dynamic');
+        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
+        bodyRef.current?.setLinvel(
+          {
+            x: target.x,
+            y: target.y + THROW_UPWARD_VELOCITY,
+            z: target.z,
+          },
+          true
+        );
+        bodyRef.current?.setRotation(
+          bodyRotation.setFromEuler(
+            bodyEuler.set(
+              Math.random() * 3,
+              Math.random() * 3,
+              Math.random() * 3
+            )
+          ),
+          true
+        );
+        setState({ playerStatus: null });
+        harnasStatus.current = undefined;
       }
     }
   });
