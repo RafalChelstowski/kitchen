@@ -47,12 +47,18 @@
 - [ ] Sync Express grip body back to Rapier on place or attach target | AC: placing the grip on a static surface re-enables the Rapier body at the placement point and returns it to dynamic physics, attaching to express/grinder/accessories re-enables or repositions the body before entering the existing animated state, the PICKED Express branch no longer calls `setNextKinematicTranslation` every frame, `pnpm test -- --run` passes
 - [ ] Convert Transform mug held rendering to camera-authoritative visual follow | AC: only the PICKED Transform mug state uses a non-physics held visual, hidden/animated/attached coffee workflow states keep their current kinematic scripted behavior, the picked Transform Rapier body is disabled or removed from collision solving while held, `pnpm typecheck` passes
 - [ ] Sync Transform mug body back to Rapier on place, attach, and throw | AC: placing the Transform mug re-enables the body at the placement point, attaching to the espresso machine enters the existing animated coffee state from the held visual transform, throwing re-enables the body at the held visual transform before applying velocity, `pnpm test -- --run` passes
-- [ ] Remove obsolete picked-state kinematic follow code | AC: `rg "setNextKinematic" src/features/kitchen/Mugs.tsx src/features/kitchen/interactive/Harnas.tsx src/features/kitchen/interactive/Express.tsx src/features/kitchen/interactive/Transform.tsx` shows no PICKED camera-follow branches, `pnpm typecheck` passes
+- [ ] Remove obsolete picked-state kinematic follow code | AC: `rg "setNextKinematic" src/features/kitchen/Mugs.tsx src/features/kitchen/interactive/Harnas.tsx src/features/kitchen/interactive/Express.tsx src/features/kitchen/interactive/Transform.tsx` shows no PICKED camera-follow branches using `setNextKinematicTranslation` or `setNextKinematicRotation`, scripted non-held animation states may still use `setNextKinematic*`, `pnpm typecheck` passes
+- [ ] Final held-item regression check | AC: picking up Harnas, a regular mug, Express grip, and Transform mug no longer vibrates while moving with WASD, camera rotation still keeps the held item stable, place/drop/throw still returns each item to visible Rapier-driven world behavior, `pnpm build` passes
 
 ## Findings
 
 - Next held-item pass should prefer camera-authoritative non-physics held visuals for PICKED states; Rapier bodies should be disabled while held, then synchronized back to physics on place, attach, throw, or drop.
 - Keep existing kinematic/scripted coffee workflow states for Express and Transform; this pass targets only PICKED held follow behavior unless the task explicitly says otherwise.
+- The old dynamic-body teleport issue has mostly been fixed already; current held objects use `kinematicPosition` and `setNextKinematicTranslation`.
+- Rapier applies `setNextKinematicTranslation` on the next physics pipeline update, not immediately.
+- `@react-three/rapier` defaults to fixed 1/60 physics plus interpolation, while the player camera and held-item targets are updated in render-frame callbacks.
+- The vibration appears only during player movement because camera world position changes every frame; camera rotation is stable because the positional lag is much smaller.
+- The recommended fix is to decouple visible held items from Rapier while held, then sync back to Rapier only on place, drop, or throw.
 - Current branch is already on `@react-three/rapier@2.2.0`, React 19, R3F 9, Drei 10, and Three >=0.159.
 - `react-toastify@8.2.0` is incompatible with the current React 19 runtime behavior and crashes when achievement toasts render.
 - The Rapier init warning appears to come from `@react-three/rapier` calling `@dimforge/rapier3d-compat.init()` internally, not from app code.
