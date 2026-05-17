@@ -4,6 +4,15 @@ This file records the current `@react-three/cannon` usage before any Rapier
 migration work. It is an inventory only; physics behavior remains unchanged in
 this pass.
 
+## Rapier Migration Constraints
+
+- Target package for the future migration: `@react-three/rapier@2.2.0`.
+- The Rapier migration is a separate implementation pass. This modernization
+  pass must not upgrade, remove, or partially replace the current
+  `@react-three/cannon` runtime behavior.
+- Current verification commands for this pass: `pnpm typecheck`, `pnpm test`,
+  and `pnpm build`.
+
 ## Runtime Setup
 
 | Component | Cannon usage | Current role |
