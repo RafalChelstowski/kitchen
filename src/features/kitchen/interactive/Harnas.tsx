@@ -7,7 +7,6 @@ import {
   CylinderCollider,
   RapierRigidBody,
   RigidBody,
-  useRapier,
 } from '@react-three/rapier';
 import * as THREE from 'three';
 
@@ -22,7 +21,6 @@ import {
 import { createHeldItemPoseHelper } from '../heldItemPose';
 
 type PositionTuple = [number, number, number];
-type HarnasBodyType = 'dynamic' | 'kinematicPosition';
 
 const HIDDEN_POSITION: PositionTuple = [2.85, 5, -3.7];
 const INITIAL_POSITION: PositionTuple = [0, 1, 0];
@@ -53,25 +51,25 @@ function objectOrParentHasName(
   return false;
 }
 
-function setNextHarnasTransform(
+function setHarnasBodyTransform(
   body: RapierRigidBody,
   quaternion: THREE.Quaternion,
   position: PositionTuple
 ) {
   const [x, y, z] = position;
 
-  body.setNextKinematicTranslation({ x, y, z });
-  body.setNextKinematicRotation(quaternion);
+  body.setTranslation({ x, y, z }, true);
+  body.setRotation(quaternion, true);
 }
 
 export function Harnas(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
-  const { rapier } = useRapier();
   const { nodes, materials } = useGLTF('/can_uv.gltf') as unknown as GLTFResult;
   const bodyRef = useRef<RapierRigidBody>(null);
   const dummyRef = useRef<THREE.Mesh>(null);
+  const heldMeshRef = useRef<THREE.Mesh>(null);
   const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
   const initialRotation = useRef<PositionTuple>([
     Math.random(),
@@ -83,10 +81,16 @@ export function Harnas(): JSX.Element {
   const harnasStatus = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.HIDDEN
   );
-  const [harnasBodyType, setHarnasBodyType] =
-    useState<HarnasBodyType>('dynamic');
+  const [isHarnasHeld, setIsHarnasHeld] = useState(false);
 
   const [initialX, initialY, initialZ] = FRIDGE_POSITION;
+
+  const pickUpHarnas = () => {
+    harnasStatus.current = InteractiveObjectStatus.PICKED;
+    bodyRef.current?.setEnabled(false);
+    setIsHarnasHeld(true);
+    setState({ playerStatus: PlayerStatus.PICKED });
+  };
 
   useEvent('click', async (event: Event) => {
     event.stopPropagation();
@@ -103,13 +107,7 @@ export function Harnas(): JSX.Element {
       }
 
       if (x[0].distance < 2) {
-        harnasStatus.current = InteractiveObjectStatus.PICKED;
-        setHarnasBodyType('kinematicPosition');
-        bodyRef.current?.setBodyType(
-          rapier.RigidBodyType.KinematicPositionBased,
-          true
-        );
-        setState({ playerStatus: PlayerStatus.PICKED });
+        pickUpHarnas();
       }
 
       return;
@@ -129,13 +127,15 @@ export function Harnas(): JSX.Element {
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        setHarnasBodyType('dynamic');
-        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
+        bodyRef.current?.setEnabled(true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
         );
+        bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
         harnasStatus.current = undefined;
+        setIsHarnasHeld(false);
 
         await new Promise((res) => {
           setTimeout(res);
@@ -156,13 +156,7 @@ export function Harnas(): JSX.Element {
         setTimeout(res, 20);
       });
 
-      harnasStatus.current = InteractiveObjectStatus.PICKED;
-      setHarnasBodyType('kinematicPosition');
-      bodyRef.current?.setBodyType(
-        rapier.RigidBodyType.KinematicPositionBased,
-        true
-      );
-      setState({ playerStatus: PlayerStatus.PICKED });
+      pickUpHarnas();
     }
   };
 
@@ -189,12 +183,12 @@ export function Harnas(): JSX.Element {
         camera,
         [0.15, -0.15, -0.4]
       );
+      const heldMesh = heldMeshRef.current;
 
-      setNextHarnasTransform(
-        body,
-        quaternion,
-        [position.x, position.y, position.z]
-      );
+      if (heldMesh) {
+        heldMesh.position.copy(position);
+        heldMesh.quaternion.copy(quaternion);
+      }
     }
   });
 
@@ -206,11 +200,22 @@ export function Harnas(): JSX.Element {
     if (key === ' ') {
       if (harnasStatus.current === InteractiveObjectStatus.PICKED) {
         const target = new THREE.Vector3();
+        const { position, quaternion } = heldPoseHelperRef.current.compute(
+          camera,
+          [0.15, -0.15, -0.4]
+        );
+
         camera.getWorldDirection(target);
         target.normalize().multiplyScalar(THROW_FORWARD_SPEED);
 
-        setHarnasBodyType('dynamic');
-        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
+        bodyRef.current?.setEnabled(true);
+        if (bodyRef.current) {
+          setHarnasBodyTransform(
+            bodyRef.current,
+            quaternion,
+            [position.x, position.y, position.z]
+          );
+        }
         bodyRef.current?.setLinvel(
           {
             x: target.x,
@@ -231,6 +236,7 @@ export function Harnas(): JSX.Element {
         );
         setState({ playerStatus: null });
         harnasStatus.current = undefined;
+        setIsHarnasHeld(false);
       }
     }
   });
@@ -240,7 +246,7 @@ export function Harnas(): JSX.Element {
       <group name="harnas">
         <RigidBody
           ref={bodyRef}
-          type={harnasBodyType}
+          type="dynamic"
           colliders={false}
           mass={HARNAS_MASS}
           linearDamping={HARNAS_LINEAR_DAMPING}
@@ -267,10 +273,21 @@ export function Harnas(): JSX.Element {
             name="harnas_real"
             material={materials.harnasblue}
             geometry={nodes.Cylinder.geometry}
+            visible={!isHarnasHeld}
             scale={0.7}
           />
         </RigidBody>
       </group>
+      <mesh
+        castShadow
+        ref={heldMeshRef}
+        name="harnas_held"
+        material={materials.harnasblue}
+        geometry={nodes.Cylinder.geometry}
+        visible={isHarnasHeld}
+        raycast={() => undefined}
+        scale={0.7}
+      />
       <mesh
         castShadow
         ref={dummyRef}
