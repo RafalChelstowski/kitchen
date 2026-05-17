@@ -11,7 +11,7 @@
 - [x] Decide lint dependency shape | AC: package either has a working lint script using installed lint deps, or old unused ESLint/Prettier packages are removed; no dead lint-only packages remain
 - [x] Refresh lockfile after dependency cleanup | AC: `pnpm-lock.yaml` matches `package.json`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass
 - [x] Upgrade TypeScript and core type packages | AC: TypeScript and React/Node type packages are updated, `tsconfig.json` no longer needs Vite/Tailwind paths workarounds, and `pnpm typecheck` passes
-- [ ] Modernize TypeScript compiler target | AC: `tsconfig.json` targets a modern browser/runtime level instead of `es5`, uses Vite-friendly module resolution, and `pnpm build` and `pnpm test` pass
+- [x] Modernize TypeScript compiler target | AC: `tsconfig.json` targets a modern browser/runtime level instead of `es5`, uses Vite-friendly module resolution, and `pnpm build` and `pnpm test` pass
 - [ ] Update React 18 patch baseline | AC: `react` and `react-dom` are on the latest React 18 line, matching type packages are compatible, and the existing app smoke test passes
 - [ ] Update React Testing Library baseline | AC: `@testing-library/react` is updated, current tests use supported APIs, and `pnpm test` passes without adding new tests
 - [ ] Replace deep Three MathUtils imports | AC: source no longer imports from `three/src/math/MathUtils`, `degToRad` imports through public Three APIs, and `pnpm build` passes
