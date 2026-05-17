@@ -1,13 +1,15 @@
 import { useState } from 'react';
 
 import { a, useSpring } from '@react-spring/three';
-import { degToRad } from 'three/src/math/MathUtils';
+import { MathUtils } from 'three';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { disabledNeonMaterial } from '../../../common/materials/materials';
 import { getState, useStore } from '../../../store/store';
 import { AchievementName } from '../../../types';
 import { useKitchenGltf } from '../useKitchenGltf';
+
+const { degToRad } = MathUtils;
 
 export function Neon(): JSX.Element {
   const { nodes, materials } = useKitchenGltf();

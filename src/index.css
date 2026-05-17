@@ -35,7 +35,3 @@
     @apply w-80 text-black p-4 my-4 rounded-lg;
   }
 }
-
-div.firebase-emulator-warning {
-  display: none;
-}

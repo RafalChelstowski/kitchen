@@ -4,12 +4,13 @@ import { a, useSpring } from '@react-spring/three';
 import { Triplet, useBox } from '@react-three/cannon';
 import * as THREE from 'three';
 import { Mesh } from 'three';
-import { degToRad } from 'three/src/math/MathUtils';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { glassMaterial } from '../../../common/materials/materials';
 import { AchievementName } from '../../../types';
 import { useKitchenGltf } from '../useKitchenGltf';
+
+const { degToRad } = THREE.MathUtils;
 
 export function InteractiveWindow(): JSX.Element {
   const { nodes, materials, kitchenMaterial } = useKitchenGltf();

@@ -6,11 +6,10 @@ import { Triplet, useBox } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { degToRad } from 'three/src/math/MathUtils';
 
 // import { Smoke } from '../../../common/components/Smoke';
 
-import { useAchievement } from '../../../api/hooks/useAchievement';
+import { useAchievement } from '../../user/useAchievement';
 import { glassMaterial } from '../../../common/materials/materials';
 import { getState, setState } from '../../../store/store';
 import {
@@ -23,6 +22,7 @@ import { useKitchenGltf } from '../useKitchenGltf';
 
 const initialPosition: Triplet = [1.65, 1.08, -5.44];
 const grinderPosition: Triplet = [2.49, 0.98, -5.52];
+const { degToRad } = THREE.MathUtils;
 const expressRotation: Triplet = [0, degToRad(-60), 0];
 const grinderRotation: Triplet = [0, degToRad(-41), 0];
 

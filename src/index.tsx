@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import ReactDOM from 'react-dom/client';
 
 import { App } from './App';
@@ -7,6 +6,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 
 const container = document.getElementById('root');
-const root = ReactDOM.createRoot(container!);
+
+if (!container) {
+  throw new Error('Root element #root was not found');
+}
+
+const root = ReactDOM.createRoot(container);
 
 root.render(<App />);

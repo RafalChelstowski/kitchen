@@ -4,6 +4,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
     "isolatedModules": true,
     "jsx": "react-jsx",
     "lib": [
@@ -12,25 +13,16 @@
       "esnext",
     ],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
-    "baseUrl": ".",
-    "paths": {
-      "@tailwindcss/vite": [
-        "node_modules/@tailwindcss/vite/dist/index.d.mts"
-      ],
-      "vite": [
-        "node_modules/vite/dist/node/index.d.ts"
-      ]
-    },
     "removeComments": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es5",
+    "target": "ES2020",
     "types": [
       "vitest/globals",
       "@testing-library/jest-dom/vitest",
