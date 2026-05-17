@@ -8,6 +8,7 @@ import {
   CuboidCollider,
   RapierRigidBody,
   RigidBody,
+  useRapier,
 } from '@react-three/rapier';
 import * as THREE from 'three';
 
@@ -66,6 +67,7 @@ export function Express(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const { addAchievement } = useAchievement();
+  const { rapier } = useRapier();
 
   const [animated, setAnimated] = useState<
     'express' | 'grinder' | 'accessories' | 'coffee' | null
@@ -161,7 +163,11 @@ export function Express(): JSX.Element {
 
         setAnimated(null);
         gripStatus.current = InteractiveObjectStatus.PICKED;
-        setGripBodyType('dynamic');
+        setGripBodyType('kinematicPosition');
+        bodyRef.current?.setBodyType(
+          rapier.RigidBodyType.KinematicPositionBased,
+          true
+        );
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'grinded',
@@ -229,7 +235,11 @@ export function Express(): JSX.Element {
 
         setAnimated(null);
         gripStatus.current = InteractiveObjectStatus.PICKED;
-        setGripBodyType('dynamic');
+        setGripBodyType('kinematicPosition');
+        bodyRef.current?.setBodyType(
+          rapier.RigidBodyType.KinematicPositionBased,
+          true
+        );
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'tempered',
@@ -270,7 +280,11 @@ export function Express(): JSX.Element {
         getState().coffeeState !== 'inProgress'
       ) {
         gripStatus.current = InteractiveObjectStatus.PICKED;
-        setGripBodyType('dynamic');
+        setGripBodyType('kinematicPosition');
+        bodyRef.current?.setBodyType(
+          rapier.RigidBodyType.KinematicPositionBased,
+          true
+        );
         setState({ playerStatus: PlayerStatus.PICKED });
 
         return;
@@ -362,6 +376,7 @@ export function Express(): JSX.Element {
       if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
         const { point } = y[0];
         setGripBodyType('dynamic');
+        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
@@ -436,17 +451,13 @@ export function Express(): JSX.Element {
       camera.getWorldDirection(rotationDirection);
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
 
-      body.setTranslation(
-        { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
-        true
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        [playerPosition.x, playerPosition.y, playerPosition.z],
+        [0, theta + Math.PI, 0]
       );
-      body.setRotation(
-        bodyQuaternion.setFromEuler(bodyEuler.set(0, theta + Math.PI, 0)),
-        true
-      );
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
     }
   });
 

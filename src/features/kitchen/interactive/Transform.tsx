@@ -8,6 +8,7 @@ import {
   CylinderCollider,
   RapierRigidBody,
   RigidBody,
+  useRapier,
 } from '@react-three/rapier';
 import * as THREE from 'three';
 
@@ -46,6 +47,7 @@ export function Transform(): JSX.Element {
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
   const coffeeState = useStore((state) => state.coffeeState);
+  const { rapier } = useRapier();
   const { nodes: mugNodes, materials: mugMaterials } = useGLTF(
     '/transformMug.gltf'
   ) as unknown as GLTFResult;
@@ -86,6 +88,10 @@ export function Transform(): JSX.Element {
       if (x[0].distance < 2) {
         status.current = InteractiveObjectStatus.PICKED;
         setMugBodyType('kinematicPosition');
+        bodyRef.current?.setBodyType(
+          rapier.RigidBodyType.KinematicPositionBased,
+          true
+        );
         setState({ playerStatus: PlayerStatus.PICKED });
       }
 
@@ -130,6 +136,7 @@ export function Transform(): JSX.Element {
       ) {
         const { point } = y[0];
         setMugBodyType('dynamic');
+        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
@@ -161,6 +168,10 @@ export function Transform(): JSX.Element {
 
       status.current = InteractiveObjectStatus.PICKED;
       setMugBodyType('kinematicPosition');
+      bodyRef.current?.setBodyType(
+        rapier.RigidBodyType.KinematicPositionBased,
+        true
+      );
       setState({ playerStatus: PlayerStatus.PICKED });
     }
   };
@@ -284,6 +295,7 @@ export function Transform(): JSX.Element {
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
           setMugBodyType('dynamic');
+          bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
           bodyRef.current?.setLinvel({ x, y, z }, true);
           bodyRef.current?.setAdditionalMass(1, true);
           bodyRef.current?.setRotation(
