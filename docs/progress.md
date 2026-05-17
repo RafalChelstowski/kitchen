@@ -6,7 +6,7 @@
 - [x] Update app test mocks for the new stack while Cannon remains | AC: existing `App.test.tsx` still mocks active physics imports, no new test framework or browser test infrastructure is added, `pnpm test` passes
 - [x] Replace Cannon Triplet type-only usage in non-body code | AC: `Letters.tsx` no longer imports from `@react-three/cannon`, local tuple type is used for animation positions, `pnpm typecheck` passes
 - [x] Replace Cannon Triplet type aliases in body components | AC: body components use a local tuple type or Three-compatible tuple type, no component imports `Triplet` from `@react-three/cannon`, `pnpm typecheck` passes
-- [ ] Switch the root physics provider to Rapier | AC: `App.tsx` imports `Physics` from `@react-three/rapier`, dev debug uses Rapier `debug={import.meta.env.DEV}` or equivalent, Cannon `Debug` is removed from `App.tsx`, existing app smoke test passes
+- [x] Switch the root physics provider to Rapier | AC: `App.tsx` imports `Physics` from `@react-three/rapier`, dev debug uses Rapier `debug={import.meta.env.DEV}` or equivalent, Cannon `Debug` is removed from `App.tsx`, existing app smoke test passes
 - [ ] Migrate floor collider to Rapier | AC: `Floor.tsx` uses Rapier fixed rigid body/collider instead of `usePlane`, floor position and rotation match previous behavior, `pnpm typecheck` passes
 - [ ] Migrate static cube bounds to Rapier | AC: `CubeBoundary` uses Rapier fixed cuboid collision, GLTF-derived position/rotation/dimensions are preserved, cube boundary mesh names remain raycast-compatible for placement logic
 - [ ] Migrate static cylinder bounds to Rapier | AC: `CylinderBoundary` uses Rapier fixed cylinder collision, GLTF-derived position/radius/height are preserved, `StaticBounds` no longer imports Cannon hooks
@@ -27,4 +27,5 @@
 ## Findings
 
 - React 19/R3F 9 compile compatibility required a local global JSX bridge in `src/types/react-jsx-compat.d.ts`, updating legacy `planeBufferGeometry`/`boxBufferGeometry` JSX tags, and using `.js` suffixes for Three example imports under bundler module resolution.
-- App smoke tests still need the active Cannon `Physics`/`Debug` mock until `App.tsx` switches providers; a minimal Rapier mock is now present in `App.test.tsx` for the migration target.
+- App smoke tests now mock the active Rapier `Physics`; Cannon `Physics`/`Debug` is no longer imported by `App.tsx`.
+- `corepack pnpm run build` passes after the root Rapier provider switch, with Vite's existing large chunk warning for the bundled app chunk.

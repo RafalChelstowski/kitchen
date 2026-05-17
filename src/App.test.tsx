@@ -3,11 +3,6 @@ import { vi } from 'vitest';
 
 import { App } from './App';
 
-vi.mock('@react-three/cannon', () => ({
-  Debug: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  Physics: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock('@react-three/rapier', () => ({
   CuboidCollider: () => null,
   CylinderCollider: () => null,

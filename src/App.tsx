@@ -1,7 +1,6 @@
-import { ReactNode, Suspense } from 'react';
+import { Suspense } from 'react';
 import { ToastContainer } from 'react-toastify';
 
-import { Debug, Physics } from '@react-three/cannon';
 import {
   AdaptiveDpr,
   Loader,
@@ -9,6 +8,7 @@ import {
   Stats,
 } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
+import { Physics } from '@react-three/rapier';
 
 import { Lights } from './common/components/Lights';
 import { Crosshair } from './features/Crosshair';
@@ -33,19 +33,6 @@ import { Surroundings } from './features/kitchen/Surroundings';
 import { Player } from './features/player/Player';
 import { UserMenus } from './features/user/UserMenus';
 
-function DevDebug({ children }: { children: ReactNode }): JSX.Element {
-  const isDev = import.meta.env.DEV;
-
-  return isDev ? (
-    <Debug color="black" scale={1.01}>
-      {children}
-      <Stats showPanel={0} />
-    </Debug>
-  ) : (
-    <>{children}</>
-  );
-}
-
 export function App(): JSX.Element {
   return (
     <div className="w-screen h-screen overflow-hidden">
@@ -57,41 +44,40 @@ export function App(): JSX.Element {
         shadows
       >
         <Lights />
-        <Physics gravity={[0, -2, 0]}>
-          <DevDebug>
-            <group dispose={null}>
-              <Suspense fallback={null}>
-                <Player />
-                <KitchenModel />
-                <Surroundings />
-                <Env />
-                <Emissive />
-                <Glass />
-                <StaticBounds />
-                <Mugs
-                  initialPosition={[-2.3, 1.38, -5.55]}
-                  objName="mugs"
-                  geometryName="toukMug1"
-                  materialName="yellowToukCupMaterial"
-                  gltfName="/toukMug.gltf"
-                  itemsNumber={12}
-                  rowModifier={6}
-                />
-                <Neon />
-                <Floor />
-                <Fridge />
-                <Express />
-                <Drawer />
-                <Cupboard />
-                <InteractiveWindow />
-                <Microwave />
-                <Harnas />
-                <Letters />
-                <Transform />
-                <Preload all />
-              </Suspense>
-            </group>
-          </DevDebug>
+        <Physics gravity={[0, -2, 0]} debug={import.meta.env.DEV}>
+          {import.meta.env.DEV ? <Stats showPanel={0} /> : null}
+          <group dispose={null}>
+            <Suspense fallback={null}>
+              <Player />
+              <KitchenModel />
+              <Surroundings />
+              <Env />
+              <Emissive />
+              <Glass />
+              <StaticBounds />
+              <Mugs
+                initialPosition={[-2.3, 1.38, -5.55]}
+                objName="mugs"
+                geometryName="toukMug1"
+                materialName="yellowToukCupMaterial"
+                gltfName="/toukMug.gltf"
+                itemsNumber={12}
+                rowModifier={6}
+              />
+              <Neon />
+              <Floor />
+              <Fridge />
+              <Express />
+              <Drawer />
+              <Cupboard />
+              <InteractiveWindow />
+              <Microwave />
+              <Harnas />
+              <Letters />
+              <Transform />
+              <Preload all />
+            </Suspense>
+          </group>
         </Physics>
         <AdaptiveDpr pixelated />
       </Canvas>
