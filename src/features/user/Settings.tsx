@@ -43,12 +43,12 @@ export function SettingsPage(): JSX.Element {
   };
 
   return (
-    <div className="flex flex-col w-full place-content-center place-items-center">
+    <div className="flex flex-col w-full place-content-center place-items-center text-white">
       <h3 className="font-black text-xl my-3 mt-10">Graphics - presets:</h3>
       <div className="flex flex-row">
         <div className="m-4">
           <button
-            className="cta text-sm"
+            className="cta text-sm text-white"
             type="button"
             name="low preset"
             onClick={setLowPreset}
@@ -58,7 +58,7 @@ export function SettingsPage(): JSX.Element {
         </div>
         <div className="m-4">
           <button
-            className="cta text-sm"
+            className="cta text-sm text-white"
             type="button"
             name="medium preset"
             onClick={setMediumPreset}
@@ -68,7 +68,7 @@ export function SettingsPage(): JSX.Element {
         </div>
         <div className="m-4">
           <button
-            className="cta text-sm"
+            className="cta text-sm text-white"
             type="button"
             name="medium preset"
             onClick={setHighPreset}
@@ -107,7 +107,7 @@ export function SettingsPage(): JSX.Element {
         <label htmlFor="lights">
           Lights
           <select
-            className="ml-6 placeholder-gray-700 text-black text-xl p-2 w-40"
+            className="ml-6 w-40 rounded bg-tViolet p-2 text-xl text-white"
             id="lights"
             name="lights"
             value={lights}
@@ -120,9 +120,15 @@ export function SettingsPage(): JSX.Element {
               }))
             }
           >
-            <option value={1}>low</option>
-            <option value={2}>medium</option>
-            <option value={3}>high</option>
+            <option className="bg-tViolet text-white" value={1}>
+              low
+            </option>
+            <option className="bg-tViolet text-white" value={2}>
+              medium
+            </option>
+            <option className="bg-tViolet text-white" value={3}>
+              high
+            </option>
           </select>
         </label>
       </div>

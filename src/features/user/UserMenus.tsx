@@ -1,49 +1,23 @@
-import { useEffect } from 'react';
+import { Route } from 'wouter';
 
-import { isEmpty } from 'lodash';
-import { Redirect, Route } from 'wouter';
-
-import { useSnapshot } from '../../api/hooks/useSnapshot';
-import { useUser } from '../../api/hooks/useUser';
 import { LockButton } from '../../common/components/LockButton';
 import { MouseLeftButton } from '../../common/ui/MouseLeftButtonIcon';
 import { useStore } from '../../store/store';
-import { Achievements } from '../../types';
 import { Nav, routes } from '../Nav';
 import { Achievements as AchievementsPage } from './Achievements';
-import { PasswordForgetPage } from './PasswordForget';
 import { SettingsPage } from './Settings';
-import { SignInPage } from './SignIn';
-import { SignOutPage } from './SignOut';
-import { SignUpPage } from './SignUp';
-import { UserAccountPage } from './UserAccountPage';
 
 export function UserMenus(): JSX.Element | null {
   const isLocked = useStore((state) => state.isLocked);
-  const { uid } = useUser();
-  const achievements = useStore((state) => state.achievements);
-  const setAchievements = useStore((state) => state.setAchievements);
-
-  const { data } = useSnapshot<Achievements | null>(
-    `users/${uid}/achievements`,
-    {
-      enabled: Boolean(uid) && isEmpty(achievements),
-    }
-  );
-
-  useEffect(() => {
-    if (data) {
-      setAchievements(data);
-    }
-  }, [data, setAchievements]);
 
   if (isLocked) {
     return null;
   }
 
   return (
-    <main className="flex absolute w-screen h-screen justify-center z-50 top-0 left-0 bg-tViolet bg-opacity-70 overflow-hidden">
-      <div className="container mx-auto flex flex-row p-6">
+    <main className="flex absolute w-screen h-screen justify-center z-50 top-0 left-0 overflow-hidden">
+      <div className="absolute inset-0 bg-tViolet/70" aria-hidden="true" />
+      <div className="container mx-auto flex flex-row p-6 relative z-10">
         <div className="w-1/3 flex">
           <Nav />
         </div>
@@ -93,29 +67,8 @@ export function UserMenus(): JSX.Element | null {
               </div>
             </div>
           </Route>
-          <Route
-            path={routes.SIGN_IN}
-            component={uid ? () => <Redirect to={routes.HOME} /> : SignInPage}
-          />
-          <Route
-            path={routes.SIGN_UP}
-            component={uid ? () => <Redirect to={routes.HOME} /> : SignUpPage}
-          />
-          <Route
-            path={routes.ACCOUNT}
-            component={
-              uid ? UserAccountPage : () => <Redirect to={routes.HOME} />
-            }
-          />
           <Route path={routes.ACHIEVEMENTS} component={AchievementsPage} />
           <Route path={routes.SETTINGS} component={SettingsPage} />
-          <Route
-            path={routes.PASSWORD_FORGET}
-            component={
-              uid ? () => <Redirect to={routes.HOME} /> : PasswordForgetPage
-            }
-          />
-          <Route path={routes.SIGN_OUT} component={SignOutPage} />
         </div>
       </div>
     </main>

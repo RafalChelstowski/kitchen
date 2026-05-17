@@ -7,7 +7,6 @@ import {
   Loader,
   Preload,
   Stats,
-  useContextBridge,
 } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 
@@ -35,7 +34,7 @@ import { Player } from './features/player/Player';
 import { UserMenus } from './features/user/UserMenus';
 
 function DevDebug({ children }: { children: ReactNode }): JSX.Element {
-  const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+  const isDev = import.meta.env.DEV;
 
   return isDev ? (
     <Debug color="black" scale={1.01}>
@@ -48,12 +47,6 @@ function DevDebug({ children }: { children: ReactNode }): JSX.Element {
 }
 
 export function App(): JSX.Element {
-  if (!window.ReactQueryClientContext) {
-    throw new Error('no react query context');
-  }
-
-  const ContextBridge = useContextBridge(window.ReactQueryClientContext);
-
   return (
     <div className="w-screen h-screen overflow-hidden">
       <Canvas
@@ -64,45 +57,43 @@ export function App(): JSX.Element {
         camera={{ fov: 50 }}
         shadows
       >
-        <ContextBridge>
-          <Lights />
-          <Physics gravity={[0, -2, 0]}>
-            <DevDebug>
-              <group dispose={null}>
-                <Suspense fallback={null}>
-                  <Player />
-                  <KitchenModel />
-                  <Surroundings />
-                  <Env />
-                  <Emissive />
-                  <Glass />
-                  <StaticBounds />
-                  <Mugs
-                    initialPosition={[-2.3, 1.38, -5.55]}
-                    objName="mugs"
-                    geometryName="toukMug1"
-                    materialName="yellowToukCupMaterial"
-                    gltfName="/toukMug.gltf"
-                    itemsNumber={12}
-                    rowModifier={6}
-                  />
-                  <Neon />
-                  <Floor />
-                  <Fridge />
-                  <Express />
-                  <Drawer />
-                  <Cupboard />
-                  <InteractiveWindow />
-                  <Microwave />
-                  <Harnas />
-                  <Letters />
-                  <Transform />
-                  <Preload all />
-                </Suspense>
-              </group>
-            </DevDebug>
-          </Physics>
-        </ContextBridge>
+        <Lights />
+        <Physics gravity={[0, -2, 0]}>
+          <DevDebug>
+            <group dispose={null}>
+              <Suspense fallback={null}>
+                <Player />
+                <KitchenModel />
+                <Surroundings />
+                <Env />
+                <Emissive />
+                <Glass />
+                <StaticBounds />
+                <Mugs
+                  initialPosition={[-2.3, 1.38, -5.55]}
+                  objName="mugs"
+                  geometryName="toukMug1"
+                  materialName="yellowToukCupMaterial"
+                  gltfName="/toukMug.gltf"
+                  itemsNumber={12}
+                  rowModifier={6}
+                />
+                <Neon />
+                <Floor />
+                <Fridge />
+                <Express />
+                <Drawer />
+                <Cupboard />
+                <InteractiveWindow />
+                <Microwave />
+                <Harnas />
+                <Letters />
+                <Transform />
+                <Preload all />
+              </Suspense>
+            </group>
+          </DevDebug>
+        </Physics>
         <AdaptiveDpr pixelated />
       </Canvas>
       <Loader />

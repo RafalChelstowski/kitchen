@@ -18,8 +18,7 @@
     "sourceType": "module"
   },
   "plugins": [
-    "eslint-plugin-import-helpers",
-    "jest"
+    "eslint-plugin-import-helpers"
   ],
   "rules": {
     "no-param-reassign": [
@@ -75,8 +74,7 @@
     "sort-imports": ["warn", {
       "ignoreCase": true,
       "ignoreDeclarationSort": true
-    }],
-    "jest/no-focused-tests": "warn"
+    }]
   },
   "settings": {
     "react": {
