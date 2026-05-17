@@ -1,5 +1,6 @@
-import { useBox, useCylinder } from '@react-three/cannon';
+import { useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
+import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 
 import { GLTFResult } from '../../types';
@@ -17,28 +18,27 @@ function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
     box.max.z - box.min.z,
   ];
 
-  const [ref] = useBox<THREE.Mesh>(() => ({
-    type: 'Static',
-    position: [...position.toArray()],
-    args: dimensions,
-    rotation: [rotation.x, rotation.y, rotation.z],
-    // material: {
-    //   contactEquationRelaxation: 3,
-    //   contactEquationStiffness: 1e8,
-    //   friction: 0.4,
-    //   frictionEquationStiffness: 1e8,
-    //   restitution: 0.3,
-    // },
-  }));
-
   return (
-    <mesh
-      name="static-cube"
-      ref={ref}
-      geometry={geometry}
-      material={material}
-      scale={scale}
-    />
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      position={[...position.toArray()]}
+      rotation={[rotation.x, rotation.y, rotation.z]}
+    >
+      <CuboidCollider
+        args={[
+          dimensions[0] / 2,
+          dimensions[1] / 2,
+          dimensions[2] / 2,
+        ]}
+      />
+      <mesh
+        name="static-cube"
+        geometry={geometry}
+        material={material}
+        scale={scale}
+      />
+    </RigidBody>
   );
 }
 
