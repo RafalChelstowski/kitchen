@@ -5,9 +5,8 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import {
   CuboidCollider,
-  InstancedRigidBodies,
-  type InstancedRigidBodyProps,
   type RapierRigidBody,
+  RigidBody,
 } from '@react-three/rapier';
 import first from 'lodash/first';
 import * as THREE from 'three';
@@ -16,6 +15,13 @@ import { getState, setState } from '../../store/store';
 import { GLTFResult, PlayerStatus } from '../../types';
 
 type PositionTuple = [number, number, number];
+type RotationTuple = [number, number, number];
+
+interface MugBodyConfig {
+  key: string;
+  position: PositionTuple;
+  rotation: RotationTuple;
+}
 
 interface Props {
   initialPosition: PositionTuple;
@@ -43,7 +49,7 @@ export function Mugs({
   itemsNumber = 10,
   rowModifier = 5,
 }: Props): JSX.Element {
-  const instances = useMemo<InstancedRigidBodyProps[]>(
+  const mugs = useMemo<MugBodyConfig[]>(
     () =>
       Array.from({ length: itemsNumber }, (_, idx) => {
         const gridIdx = Math.floor(idx / rowModifier);
@@ -65,7 +71,7 @@ export function Mugs({
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const instanceId = useRef<number | undefined>(undefined);
-  const bodiesRef = useRef<(RapierRigidBody | null)[] | null>(null);
+  const bodiesRef = useRef<(RapierRigidBody | null)[]>([]);
 
   const { nodes, materials } = useGLTF(gltfName) as unknown as GLTFResult;
 
@@ -76,15 +82,22 @@ export function Mugs({
 
     if (playerStatus === null) {
       const y = scene.getObjectByName('mug');
-      const x = raycaster.intersectObjects(y?.children || scene.children);
+      const x = raycaster.intersectObjects(
+        y?.children || scene.children,
+        true
+      );
 
       if (!x[0]) {
         return;
       }
 
       if (x[0].distance < 2) {
-        instanceId.current = x[0].instanceId;
-        setState({ playerStatus: PlayerStatus.PICKED });
+        const mugIndex = x[0].object.userData.mugIndex;
+
+        if (typeof mugIndex === 'number') {
+          instanceId.current = mugIndex;
+          setState({ playerStatus: PlayerStatus.PICKED });
+        }
       }
 
       return;
@@ -105,7 +118,7 @@ export function Mugs({
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        bodiesRef.current?.[instanceId.current]?.setTranslation(
+        bodiesRef.current[instanceId.current]?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
         );
@@ -164,7 +177,7 @@ export function Mugs({
       camera.getWorldDirection(rotationDirection);
       rotationDirection.normalize();
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
-      const body = bodiesRef.current?.[instanceId.current];
+      const body = bodiesRef.current[instanceId.current];
 
       body?.setTranslation(position, true);
       body?.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -177,27 +190,29 @@ export function Mugs({
 
   return (
     <group name="mug">
-      <InstancedRigidBodies
-        ref={bodiesRef}
-        instances={instances}
-        colliders={false}
-        colliderNodes={[
-          <CuboidCollider key="mug-collider" args={[0.05, 0.04, 0.05]} />,
-        ]}
-        type="dynamic"
-        mass={20}
-        canSleep
-      >
-        <instancedMesh
-          castShadow
-          args={[
-            nodes[geometryName].geometry,
-            customMaterial || materials[materialName],
-            itemsNumber,
-          ]}
-          name={`${objName}`}
-        />
-      </InstancedRigidBodies>
+      {mugs.map((mug, idx) => (
+        <RigidBody
+          key={mug.key}
+          ref={(body) => {
+            bodiesRef.current[idx] = body;
+          }}
+          colliders={false}
+          type="dynamic"
+          mass={20}
+          canSleep
+          position={mug.position}
+          rotation={mug.rotation}
+        >
+          <CuboidCollider args={[0.05, 0.04, 0.05]} />
+          <mesh
+            castShadow
+            geometry={nodes[geometryName].geometry}
+            material={customMaterial || materials[materialName]}
+            name={`${objName}`}
+            userData={{ mugIndex: idx }}
+          />
+        </RigidBody>
+      ))}
     </group>
   );
 }
