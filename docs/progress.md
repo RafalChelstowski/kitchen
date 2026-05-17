@@ -14,7 +14,7 @@
 - [x] Modernize TypeScript compiler target | AC: `tsconfig.json` targets a modern browser/runtime level instead of `es5`, uses Vite-friendly module resolution, and `pnpm build` and `pnpm test` pass
 - [x] Update React 18 patch baseline | AC: `react` and `react-dom` are on the latest React 18 line, matching type packages are compatible, and the existing app smoke test passes
 - [x] Update React Testing Library baseline | AC: `@testing-library/react` is updated, current tests use supported APIs, and `pnpm test` passes without adding new tests
-- [ ] Replace deep Three MathUtils imports | AC: source no longer imports from `three/src/math/MathUtils`, `degToRad` imports through public Three APIs, and `pnpm build` passes
+- [x] Replace deep Three MathUtils imports | AC: source no longer imports from `three/src/math/MathUtils`, `degToRad` imports through public Three APIs, and `pnpm build` passes
 - [ ] Add physics migration inventory | AC: `docs/physics-migration.md` lists every current `@react-three/cannon` usage by component, identifies each body shape/type, and notes whether it is static, dynamic, kinematic-like, or player-controlled
 - [ ] Document Rapier migration constraints | AC: `docs/physics-migration.md` records target package `@react-three/rapier@2.2.0`, states that the Rapier migration is a separate pass, and lists current verification commands
 - [ ] Remove Cannon version-update task from this pass | AC: `package.json` still uses the current Cannon package unless changed by another completed task, and no task in this pass attempts a partial Cannon upgrade

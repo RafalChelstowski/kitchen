@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
 import { a, useSpring } from '@react-spring/three';
-import { degToRad } from 'three/src/math/MathUtils';
+import { MathUtils } from 'three';
 
 import { useKitchenGltf } from '../useKitchenGltf';
+
+const { degToRad } = MathUtils;
 
 export function Microwave(): JSX.Element {
   const { nodes, materials, kitchenMaterial } = useKitchenGltf();

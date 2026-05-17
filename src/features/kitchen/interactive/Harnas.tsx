@@ -6,7 +6,6 @@ import { useGLTF } from '@react-three/drei';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { Mesh } from 'three';
 import * as THREE from 'three';
-import { degToRad } from 'three/src/math/MathUtils';
 
 import { useAchievement } from '../../user/useAchievement';
 import { getState, setState } from '../../../store/store';
@@ -19,6 +18,7 @@ import {
 
 const HIDDEN_POSITION = [2.85, 5, -3.7];
 const FRIDGE_POSITION = [3.0, 0.63, -3.63];
+const { degToRad } = THREE.MathUtils;
 
 export function Harnas(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
