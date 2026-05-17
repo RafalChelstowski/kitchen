@@ -12,7 +12,7 @@
 - [x] Migrate static cylinder bounds to Rapier | AC: `CylinderBoundary` uses Rapier fixed cylinder collision, GLTF-derived position/radius/height are preserved, `StaticBounds` no longer imports Cannon hooks
 - [x] Migrate window blocker to Rapier | AC: `InteractiveWindow` uses a Rapier fixed/kinematic collider instead of `useBox`, open state moves the blocker out of the window path, closed state restores the original blocker position
 - [x] Migrate player body to Rapier | AC: `Player.tsx` uses a Rapier rigid body ref instead of `useBox`, pointer-lock movement still drives horizontal velocity, camera follows the body, rotations are locked/reset so the player does not tip over
-- [ ] Migrate Harnas can body to Rapier | AC: `Harnas.tsx` uses Rapier cylinder body/collider, hidden/picked/thrown states preserve position/velocity/rotation behavior, floor collision still unlocks `AchievementName.HARNAS`
+- [x] Migrate Harnas can body to Rapier | AC: `Harnas.tsx` uses Rapier cylinder body/collider, hidden/picked/thrown states preserve position/velocity/rotation behavior, floor collision still unlocks `AchievementName.HARNAS`
 - [ ] Migrate Transform mug body to Rapier | AC: `Transform.tsx` uses Rapier cylinder body/collider, hidden/picked/animated/attached states preserve position/velocity/rotation behavior, ready-coffee reset collision behavior is preserved
 - [ ] Migrate Express grip body to Rapier | AC: `Express.tsx` uses Rapier cuboid body/collider, pickup/drop/attached/animated states preserve position/rotation/velocity behavior, coffee state transitions still typecheck
 - [ ] Migrate Mugs instanced bodies to Rapier | AC: `Mugs.tsx` uses Rapier instanced rigid bodies, initial grid placement is preserved, selected mug can still be positioned while picked and thrown with velocity
@@ -30,3 +30,4 @@
 - App smoke tests now mock the active Rapier `Physics`; Cannon `Physics`/`Debug` is no longer imported by `App.tsx`.
 - `corepack pnpm run build` passes after the root Rapier provider switch, with Vite's existing large chunk warning for the bundled app chunk.
 - Rapier player migration uses a dynamic `RigidBody` with a manual cuboid collider, `lockRotations`, `setLinvel` for pointer-lock movement, and `setAdditionalMass(0/3)` to preserve the previous unlocked/locked mass behavior.
+- Rapier Harnas migration uses a dynamic `RigidBody` with a manual `CylinderCollider`; floor collision checks both `other.colliderObject` and `other.rigidBodyObject` ancestors for the existing `floor` mesh name before unlocking `AchievementName.HARNAS`.

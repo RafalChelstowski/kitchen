@@ -1,10 +1,13 @@
 import { useRef } from 'react';
 import { useEvent } from 'react-use';
 
-import { useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
-import { Mesh } from 'three';
+import {
+  CylinderCollider,
+  RapierRigidBody,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
 
 import { useAchievement } from '../../user/useAchievement';
@@ -16,30 +19,43 @@ import {
   PlayerStatus,
 } from '../../../types';
 
-const HIDDEN_POSITION = [2.85, 5, -3.7];
-const FRIDGE_POSITION = [3.0, 0.63, -3.63];
+type PositionTuple = [number, number, number];
+
+const HIDDEN_POSITION: PositionTuple = [2.85, 5, -3.7];
+const INITIAL_POSITION: PositionTuple = [0, 1, 0];
+const FRIDGE_POSITION: PositionTuple = [3.0, 0.63, -3.63];
 const { degToRad } = THREE.MathUtils;
+
+function objectOrParentHasName(
+  object: THREE.Object3D | undefined,
+  name: string
+) {
+  let current = object;
+
+  while (current) {
+    if (current.name === name) {
+      return true;
+    }
+
+    current = current.parent ?? undefined;
+  }
+
+  return false;
+}
 
 export function Harnas(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
   const { nodes, materials } = useGLTF('/can_uv.gltf') as unknown as GLTFResult;
-  const dummyRef = useRef<Mesh>(null);
+  const bodyRef = useRef<RapierRigidBody>(null);
+  const dummyRef = useRef<THREE.Mesh>(null);
+  const initialRotation = useRef<PositionTuple>([
+    Math.random(),
+    Math.random(),
+    Math.random(),
+  ]);
   const { addAchievement } = useAchievement();
-
-  const [ref, api] = useCylinder<Mesh>(() => ({
-    mass: 1,
-    args: [0.06, 0.06, 0.14, 12],
-    position: [0, 1, 0],
-    rotation: [Math.random(), Math.random(), Math.random()],
-    allowSleep: false,
-    onCollideBegin: (e) => {
-      if (e.body.name === 'floor') {
-        addAchievement(AchievementName.HARNAS);
-      }
-    },
-  }));
 
   const harnasStatus = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.HIDDEN
@@ -83,7 +99,10 @@ export function Harnas(): JSX.Element {
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        api.position.set(point.x, point.y + 0.2, point.z);
+        bodyRef.current?.setTranslation(
+          { x: point.x, y: point.y + 0.2, z: point.z },
+          true
+        );
         harnasStatus.current = undefined;
 
         await new Promise((res) => {
@@ -112,13 +131,22 @@ export function Harnas(): JSX.Element {
 
   const zCamVec = new THREE.Vector3();
   const rotationDirection = new THREE.Vector3();
+  const bodyRotation = new THREE.Quaternion();
+  const bodyEuler = new THREE.Euler();
 
   useFrame(() => {
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
+    }
+
     if (harnasStatus.current === InteractiveObjectStatus.HIDDEN) {
       const [hiddenX, hiddenY, hiddenZ] = HIDDEN_POSITION;
-      api.position.set(hiddenX, hiddenY, hiddenZ);
-      api.velocity.set(0, 0, 0);
-      api.rotation.set(0, 0, 0);
+      body.setTranslation({ x: hiddenX, y: hiddenY, z: hiddenZ }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setRotation(bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0)), true);
     }
 
     if (harnasStatus.current === InteractiveObjectStatus.PICKED) {
@@ -128,9 +156,16 @@ export function Harnas(): JSX.Element {
       rotationDirection.normalize();
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
 
-      api.position.set(position.x, position.y, position.z);
-      api.velocity.set(0, 0, 0);
-      api.rotation.set(0, theta + Math.PI, 0);
+      body.setTranslation(
+        { x: position.x, y: position.y, z: position.z },
+        true
+      );
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setRotation(
+        bodyRotation.setFromEuler(bodyEuler.set(0, theta + Math.PI, 0)),
+        true
+      );
     }
   });
 
@@ -151,11 +186,16 @@ export function Harnas(): JSX.Element {
           camera.getWorldDirection(target);
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 15));
 
-          api.velocity.set(x, y, z);
-          api.rotation.set(
-            Math.random() * 3,
-            Math.random() * 3,
-            Math.random() * 3
+          bodyRef.current?.setLinvel({ x, y, z }, true);
+          bodyRef.current?.setRotation(
+            bodyRotation.setFromEuler(
+              bodyEuler.set(
+                Math.random() * 3,
+                Math.random() * 3,
+                Math.random() * 3
+              )
+            ),
+            true
           );
           setState({ playerStatus: null });
           harnasStatus.current = undefined;
@@ -167,14 +207,34 @@ export function Harnas(): JSX.Element {
   return (
     <>
       <group name="harnas">
-        <mesh
-          castShadow
-          ref={ref}
-          name="harnas_real"
-          material={materials.harnasblue}
-          geometry={nodes.Cylinder.geometry}
-          scale={0.7}
-        />
+        <RigidBody
+          ref={bodyRef}
+          type="dynamic"
+          colliders={false}
+          mass={1}
+          canSleep={false}
+          position={INITIAL_POSITION}
+          rotation={initialRotation.current}
+        >
+          <CylinderCollider
+            args={[0.07, 0.06]}
+            onCollisionEnter={({ other }) => {
+              if (
+                objectOrParentHasName(other.colliderObject, 'floor') ||
+                objectOrParentHasName(other.rigidBodyObject, 'floor')
+              ) {
+                addAchievement(AchievementName.HARNAS);
+              }
+            }}
+          />
+          <mesh
+            castShadow
+            name="harnas_real"
+            material={materials.harnasblue}
+            geometry={nodes.Cylinder.geometry}
+            scale={0.7}
+          />
+        </RigidBody>
       </group>
       <mesh
         castShadow
