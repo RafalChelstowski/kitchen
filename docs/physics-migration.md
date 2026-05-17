@@ -13,6 +13,17 @@ this pass.
 - Current verification commands for this pass: `pnpm typecheck`, `pnpm test`,
   and `pnpm build`.
 
+## Future 3D Runtime Follow-Ups
+
+- `pnpm build` currently reports `[IMPORT_IS_UNDEFINED]` because
+  `three-mesh-bvh` reads `THREE.BatchedMesh`, but the installed `three` package
+  does not export `BatchedMesh`. Treat this as a future Three/Drei/BVH
+  dependency-alignment task; do not change physics behavior in this
+  modernization pass.
+- `pnpm build` currently reports the Vite large chunk warning after minification.
+  The generated app chunk is about 1.7 MB before gzip. Treat chunk splitting or
+  lazy-loading of heavy 3D runtime code as a separate performance follow-up.
+
 ## Runtime Setup
 
 | Component | Cannon usage | Current role |
