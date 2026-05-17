@@ -51,6 +51,7 @@ const useStoreImpl = create<State>()(
             })
           );
         },
+        setIsLocked: (isLocked) => set(() => ({ isLocked })),
         toggleIsLocked: () => set((state) => ({ isLocked: !state.isLocked })),
         setPlayerStatus: (status) => set(() => ({ playerStatus: status })),
       }),

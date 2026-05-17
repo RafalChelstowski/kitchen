@@ -31,8 +31,8 @@ export function Player(): JSX.Element {
   const controlsRef = useRef<ControlsLock>(null);
   const bodyRef = useRef<RapierRigidBody>(null);
 
-  const { toggleIsLocked } = useStore((state) => ({
-    toggleIsLocked: state.toggleIsLocked,
+  const { setIsLocked } = useStore((state) => ({
+    setIsLocked: state.setIsLocked,
   }));
 
   const camera = useThree((state) => state.camera);
@@ -77,7 +77,7 @@ export function Player(): JSX.Element {
   useEvent(
     'pointerlockchange',
     () => {
-      toggleIsLocked();
+      setIsLocked(document.pointerLockElement === gl.domElement);
     },
     document
   );
