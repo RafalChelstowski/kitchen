@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { a, config, useSpring } from '@react-spring/three';
-import { Triplet } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { BufferGeometry, Material, Mesh } from 'three';
@@ -15,36 +14,38 @@ import {
   InteractiveObjectStatus,
 } from '../../../types';
 
-const tPresentationPos: Triplet = [0.53, 0.98, 5.95];
-const tInitialPos: Triplet = [0.2, 0.35, -3.8];
-const tAnim: Triplet[] = [
+type PositionTuple = [number, number, number];
+
+const tPresentationPos: PositionTuple = [0.53, 0.98, 5.95];
+const tInitialPos: PositionTuple = [0.2, 0.35, -3.8];
+const tAnim: PositionTuple[] = [
   [0.1, 0.35, -4.1],
   [0.2, 1.5, -3.8],
   [2, 0.7, -1.8],
   tPresentationPos,
 ];
 
-const oPresentationPos: Triplet = [0.42, 0.98, 5.96];
-const oInitialPos: Triplet = [-2.8, 0.82, -3.4];
-const oAnim: Triplet[] = [
+const oPresentationPos: PositionTuple = [0.42, 0.98, 5.96];
+const oInitialPos: PositionTuple = [-2.8, 0.82, -3.4];
+const oAnim: PositionTuple[] = [
   [-2.14, 1, -3.42],
   [-1.6, 1.5, -0.5],
   [2.6, 1, 0.1],
   oPresentationPos,
 ];
 
-const uPresentationPos: Triplet = [0.29, 0.98, 5.98];
-const uInitialPos: Triplet = [2.29, 0.75, 0.245];
-const uAnim: Triplet[] = [
+const uPresentationPos: PositionTuple = [0.29, 0.98, 5.98];
+const uInitialPos: PositionTuple = [2.29, 0.75, 0.245];
+const uAnim: PositionTuple[] = [
   [2.1, 0.9, 0.28],
   [-2.3, 2, 3.9],
   [2.4, 1, 3.8],
   uPresentationPos,
 ];
 
-const kPresentationPos: Triplet = [0.23, 0.98, 5.97];
-const kInitialPos: Triplet = [2.9, 1, -3.82];
-const kAnim: Triplet[] = [
+const kPresentationPos: PositionTuple = [0.23, 0.98, 5.97];
+const kInitialPos: PositionTuple = [2.9, 1, -3.82];
+const kAnim: PositionTuple[] = [
   [1.9, 0.9, -3.65],
   [0.2, 2, 0.75],
   [0, 1.5, 5.6],
@@ -56,8 +57,8 @@ interface LetterProps {
   geometry: BufferGeometry;
   material: Material;
   achievementName: AchievementName;
-  initialPos: Triplet;
-  animPos: Triplet[];
+  initialPos: PositionTuple;
+  animPos: PositionTuple[];
 }
 
 function Letter({
