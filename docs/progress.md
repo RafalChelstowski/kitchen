@@ -13,7 +13,7 @@
 - [x] Migrate window blocker to Rapier | AC: `InteractiveWindow` uses a Rapier fixed/kinematic collider instead of `useBox`, open state moves the blocker out of the window path, closed state restores the original blocker position
 - [x] Migrate player body to Rapier | AC: `Player.tsx` uses a Rapier rigid body ref instead of `useBox`, pointer-lock movement still drives horizontal velocity, camera follows the body, rotations are locked/reset so the player does not tip over
 - [x] Migrate Harnas can body to Rapier | AC: `Harnas.tsx` uses Rapier cylinder body/collider, hidden/picked/thrown states preserve position/velocity/rotation behavior, floor collision still unlocks `AchievementName.HARNAS`
-- [ ] Migrate Transform mug body to Rapier | AC: `Transform.tsx` uses Rapier cylinder body/collider, hidden/picked/animated/attached states preserve position/velocity/rotation behavior, ready-coffee reset collision behavior is preserved
+- [x] Migrate Transform mug body to Rapier | AC: `Transform.tsx` uses Rapier cylinder body/collider, hidden/picked/animated/attached states preserve position/velocity/rotation behavior, ready-coffee reset collision behavior is preserved
 - [ ] Migrate Express grip body to Rapier | AC: `Express.tsx` uses Rapier cuboid body/collider, pickup/drop/attached/animated states preserve position/rotation/velocity behavior, coffee state transitions still typecheck
 - [ ] Migrate Mugs instanced bodies to Rapier | AC: `Mugs.tsx` uses Rapier instanced rigid bodies, initial grid placement is preserved, selected mug can still be positioned while picked and thrown with velocity
 - [ ] Migrate unmounted Rain instanced bodies to Rapier | AC: `Rain.tsx` no longer imports Cannon, falling can instances use Rapier instanced bodies or an equivalent Rapier-compatible implementation, component typechecks even though it is not mounted
@@ -31,3 +31,4 @@
 - `corepack pnpm run build` passes after the root Rapier provider switch, with Vite's existing large chunk warning for the bundled app chunk.
 - Rapier player migration uses a dynamic `RigidBody` with a manual cuboid collider, `lockRotations`, `setLinvel` for pointer-lock movement, and `setAdditionalMass(0/3)` to preserve the previous unlocked/locked mass behavior.
 - Rapier Harnas migration uses a dynamic `RigidBody` with a manual `CylinderCollider`; floor collision checks both `other.colliderObject` and `other.rigidBodyObject` ancestors for the existing `floor` mesh name before unlocking `AchievementName.HARNAS`.
+- Rapier Transform migration uses a dynamic zero-mass `RigidBody`, manual `CylinderCollider`, `setAdditionalMass(0/1)` for attached/manual vs thrown physics, and resets ready coffee on low-height collision using the body's Rapier translation.
