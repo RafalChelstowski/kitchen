@@ -54,6 +54,7 @@ export function Transform(): JSX.Element {
   ) as unknown as GLTFResult;
   const bodyRef = useRef<RapierRigidBody>(null);
   const dummyRef = useRef<THREE.Group>(null);
+  const heldMugRef = useRef<THREE.Group>(null);
   const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
 
   const status = useRef<InteractiveObjectStatus | undefined>(
@@ -62,8 +63,21 @@ export function Transform(): JSX.Element {
 
   const [transformed, setTransformed] = useState(false);
   const [animated, setAnimated] = useState(false);
+  const [isMugHeld, setIsMugHeld] = useState(false);
   const [mugBodyType, setMugBodyType] =
     useState<MugBodyType>('kinematicPosition');
+
+  const pickUpMug = () => {
+    status.current = InteractiveObjectStatus.PICKED;
+    setMugBodyType('kinematicPosition');
+    bodyRef.current?.setBodyType(
+      rapier.RigidBodyType.KinematicPositionBased,
+      true
+    );
+    bodyRef.current?.setEnabled(false);
+    setIsMugHeld(true);
+    setState({ playerStatus: PlayerStatus.PICKED });
+  };
 
   useEvent('click', async (event: Event) => {
     event.stopPropagation();
@@ -88,13 +102,7 @@ export function Transform(): JSX.Element {
       }
 
       if (x[0].distance < 2) {
-        status.current = InteractiveObjectStatus.PICKED;
-        setMugBodyType('kinematicPosition');
-        bodyRef.current?.setBodyType(
-          rapier.RigidBodyType.KinematicPositionBased,
-          true
-        );
-        setState({ playerStatus: PlayerStatus.PICKED });
+        pickUpMug();
       }
 
       return;
@@ -113,8 +121,10 @@ export function Transform(): JSX.Element {
         x[0].object.name.includes('express') &&
         getState().coffeeState === 'gripAttached'
       ) {
+        bodyRef.current?.setEnabled(true);
         status.current = InteractiveObjectStatus.ANIMATED;
         setMugBodyType('kinematicPosition');
+        setIsMugHeld(false);
         setAnimated(true);
 
         await new Promise((res) => {
@@ -138,6 +148,7 @@ export function Transform(): JSX.Element {
       ) {
         const { point } = y[0];
         setMugBodyType('dynamic');
+        bodyRef.current?.setEnabled(true);
         bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
@@ -146,6 +157,7 @@ export function Transform(): JSX.Element {
         bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
         bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
         status.current = undefined;
+        setIsMugHeld(false);
         // setState({ playerStatus: null });
         bodyRef.current?.setAdditionalMass(1, true);
 
@@ -168,13 +180,7 @@ export function Transform(): JSX.Element {
         setTimeout(res, 20);
       });
 
-      status.current = InteractiveObjectStatus.PICKED;
-      setMugBodyType('kinematicPosition');
-      bodyRef.current?.setBodyType(
-        rapier.RigidBodyType.KinematicPositionBased,
-        true
-      );
-      setState({ playerStatus: PlayerStatus.PICKED });
+      pickUpMug();
     }
   };
 
@@ -245,19 +251,17 @@ export function Transform(): JSX.Element {
     }
 
     if (status.current === InteractiveObjectStatus.PICKED) {
-      const { position, yaw } = heldPoseHelperRef.current.compute(camera, [
+      const { position, quaternion } = heldPoseHelperRef.current.compute(camera, [
         0.15,
         -0.15,
         -0.4,
       ]);
+      const heldMug = heldMugRef.current;
 
-      setNextMugTransform(
-        body,
-        bodyRotation,
-        bodyEuler,
-        [position.x, position.y, position.z],
-        [0, yaw, 0]
-      );
+      if (heldMug) {
+        heldMug.position.copy(position);
+        heldMug.quaternion.copy(quaternion);
+      }
     }
 
     if (status.current === InteractiveObjectStatus.ANIMATED) {
@@ -295,6 +299,7 @@ export function Transform(): JSX.Element {
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
           setMugBodyType('dynamic');
+          bodyRef.current?.setEnabled(true);
           bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
           bodyRef.current?.setLinvel({ x, y, z }, true);
           bodyRef.current?.setAdditionalMass(1, true);
@@ -311,6 +316,7 @@ export function Transform(): JSX.Element {
 
           setState({ playerStatus: null });
           status.current = undefined;
+          setIsMugHeld(false);
 
           if (getState().coffeeState === 'ready') {
             setState({ coffeeState: null });
@@ -341,7 +347,7 @@ export function Transform(): JSX.Element {
             }
           }}
         />
-        <a.group name="transform">
+        <a.group name="transform" visible={!isMugHeld}>
           <group name="transform-big" visible={!transformed}>
             <mesh
               geometry={mugNodes.Cylinder003.geometry}
@@ -384,6 +390,33 @@ export function Transform(): JSX.Element {
           </group>
         </a.group>
       </RigidBody>
+      <group
+        ref={heldMugRef}
+        name="transform-held"
+        visible={isMugHeld}
+        raycast={() => undefined}
+      >
+        <group visible={!transformed}>
+          <mesh
+            geometry={mugNodes.Cylinder003.geometry}
+            material={mugMaterials.salmonToukCupMaterial}
+            castShadow
+          />
+          <mesh
+            geometry={mugNodes.Cylinder003_1.geometry}
+            material={mugMaterials.blackPlasticMaterial}
+          />
+          <mesh
+            geometry={mugNodes.Cylinder003_2.geometry}
+            material={mugMaterials.cupRedEmmisiveMAterial}
+          />
+          <mesh
+            visible={coffeeState === 'ready'}
+            geometry={mugNodes.Cylinder003_3.geometry}
+            material={mugMaterials.coffeeMaterial}
+          />
+        </group>
+      </group>
       <group
         onClick={handleDummyClick}
         position={CUPBOARD_POSITION}
