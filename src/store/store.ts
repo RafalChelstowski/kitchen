@@ -8,10 +8,7 @@ import { AchievementPayloadStatus, State } from '../types';
 
 export const STORE_PERSISTENCE_KEY = 'kitchen-store';
 
-type PersistedState = Pick<
-  State,
-  'achievements' | 'gfxSettings' | 'pointerSpeed'
->;
+type PersistedState = Pick<State, 'achievements' | 'gfxSettings'>;
 
 export const initialState = {
   gfxSettings: {
@@ -24,7 +21,6 @@ export const initialState = {
   achievements: {},
   playerStatus: null,
   isLocked: false,
-  pointerSpeed: '0.2',
 };
 
 const useStoreImpl = create<State>()(
@@ -55,6 +51,7 @@ const useStoreImpl = create<State>()(
             })
           );
         },
+        setIsLocked: (isLocked) => set(() => ({ isLocked })),
         toggleIsLocked: () => set((state) => ({ isLocked: !state.isLocked })),
         setPlayerStatus: (status) => set(() => ({ playerStatus: status })),
       }),
@@ -63,7 +60,6 @@ const useStoreImpl = create<State>()(
         partialize: (state) => ({
           achievements: state.achievements,
           gfxSettings: state.gfxSettings,
-          pointerSpeed: state.pointerSpeed,
         }),
       }
     ),

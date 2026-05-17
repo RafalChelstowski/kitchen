@@ -1,6 +1,9 @@
 packages:
   - .
 
+overrides:
+  '@react-three/rapier>@dimforge/rapier3d-compat': 0.19.3
+
 allowBuilds:
   core-js: true
   protobufjs: true

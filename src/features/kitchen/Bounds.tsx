@@ -1,43 +1,51 @@
-import { Triplet, useBox, useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
+import {
+  CuboidCollider,
+  CylinderCollider,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
 
 import { GLTFResult } from '../../types';
 
 const tBox = new THREE.Box3();
 const material = new THREE.MeshBasicMaterial({ visible: false });
+type PositionTuple = [number, number, number];
+const HARD_SURFACE_FRICTION = 0.85;
+const HARD_SURFACE_RESTITUTION = 0.05;
 
 function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
   const { position, geometry, scale, rotation } = mesh;
   const box = tBox.setFromObject(mesh);
-  const dimensions: Triplet = [
+  const dimensions: PositionTuple = [
     rotation.y === 0 ? box.max.x - box.min.x : (box.max.x - box.min.x) / 2,
     box.max.y - box.min.y,
     box.max.z - box.min.z,
   ];
 
-  const [ref] = useBox<THREE.Mesh>(() => ({
-    type: 'Static',
-    position: [...position.toArray()],
-    args: dimensions,
-    rotation: [rotation.x, rotation.y, rotation.z],
-    // material: {
-    //   contactEquationRelaxation: 3,
-    //   contactEquationStiffness: 1e8,
-    //   friction: 0.4,
-    //   frictionEquationStiffness: 1e8,
-    //   restitution: 0.3,
-    // },
-  }));
-
   return (
-    <mesh
-      name="static-cube"
-      ref={ref}
-      geometry={geometry}
-      material={material}
-      scale={scale}
-    />
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      position={[...position.toArray()]}
+      rotation={[rotation.x, rotation.y, rotation.z]}
+    >
+      <CuboidCollider
+        args={[
+          dimensions[0] / 2,
+          dimensions[1] / 2,
+          dimensions[2] / 2,
+        ]}
+        friction={HARD_SURFACE_FRICTION}
+        restitution={HARD_SURFACE_RESTITUTION}
+      />
+      <mesh
+        name="static-cube"
+        geometry={geometry}
+        material={material}
+        scale={scale}
+      />
+    </RigidBody>
   );
 }
 
@@ -47,20 +55,24 @@ function CylinderBoundary({ mesh }: { mesh: THREE.Mesh }) {
   const height = box.max.y - box.min.y;
   const { position, geometry, scale } = mesh;
 
-  const [ref] = useCylinder<THREE.Mesh>(() => ({
-    type: 'Static',
-    position: [...position.toArray()],
-    args: [radius, radius, height, 16],
-  }));
-
   return (
-    <mesh
-      name="static-cylinder"
-      ref={ref}
-      geometry={geometry}
-      material={material}
-      scale={scale}
-    />
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      position={[...position.toArray()]}
+    >
+      <CylinderCollider
+        args={[height / 2, radius]}
+        friction={HARD_SURFACE_FRICTION}
+        restitution={HARD_SURFACE_RESTITUTION}
+      />
+      <mesh
+        name="static-cylinder"
+        geometry={geometry}
+        material={material}
+        scale={scale}
+      />
+    </RigidBody>
   );
 }
 

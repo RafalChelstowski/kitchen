@@ -1,18 +1,32 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
-import { Triplet, useBox } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
+import {
+  CuboidCollider,
+  type RapierRigidBody,
+  RigidBody,
+} from '@react-three/rapier';
 import first from 'lodash/first';
 import * as THREE from 'three';
-import { InstancedMesh } from 'three';
 
 import { getState, setState } from '../../store/store';
 import { GLTFResult, PlayerStatus } from '../../types';
+import { createHeldItemPoseHelper } from './heldItemPose';
+import { intersectStaticBounds } from './staticBoundsRaycast';
+
+type PositionTuple = [number, number, number];
+type RotationTuple = [number, number, number];
+
+interface MugBodyConfig {
+  key: string;
+  position: PositionTuple;
+  rotation: RotationTuple;
+}
 
 interface Props {
-  initialPosition: Triplet;
+  initialPosition: PositionTuple;
   objName: 'mugs' | 'mugs2' | 'ikeaGlass' | 'ikeaMug1' | 'ikeaMug2';
   geometryName: string;
   materialName: string;
@@ -22,8 +36,19 @@ interface Props {
   rowModifier?: number;
 }
 
-const zCamVec = new THREE.Vector3();
-const rotationDirection = new THREE.Vector3();
+const bodyEuler = new THREE.Euler();
+const bodyRotation = new THREE.Quaternion();
+const bodyPosition = new THREE.Vector3();
+
+function syncMugBodyToTransform(
+  body: RapierRigidBody,
+  position: THREE.Vector3,
+  quaternion: THREE.Quaternion
+) {
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  body.setRotation(quaternion, true);
+}
 
 export function Mugs({
   initialPosition,
@@ -35,49 +60,34 @@ export function Mugs({
   itemsNumber = 10,
   rowModifier = 5,
 }: Props): JSX.Element {
-  const grid: number[][][] = useMemo(
+  const mugs = useMemo<MugBodyConfig[]>(
     () =>
-      Array.from({
-        length: itemsNumber / rowModifier,
-      }).map(() => []),
-    [itemsNumber, rowModifier]
+      Array.from({ length: itemsNumber }, (_, idx) => {
+        const gridIdx = Math.floor(idx / rowModifier);
+        const x = idx - gridIdx * rowModifier;
+
+        return {
+          key: `${objName}-${idx}`,
+          position: [
+            initialPosition[0] + x * 0.11,
+            initialPosition[1] + 0.2,
+            initialPosition[2] + gridIdx * 0.13,
+          ],
+          rotation: [0, Math.random() * 3, 0],
+        };
+      }),
+    [initialPosition, itemsNumber, objName, rowModifier]
   );
   const camera = useThree((state) => state.camera);
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const instanceId = useRef<number | undefined>(undefined);
+  const bodiesRef = useRef<(RapierRigidBody | null)[]>([]);
+  const heldMeshRef = useRef<THREE.Mesh>(null);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
+  const [heldMugIndex, setHeldMugIndex] = useState<number | undefined>();
 
   const { nodes, materials } = useGLTF(gltfName) as unknown as GLTFResult;
-
-  const [ref, api] = useBox<InstancedMesh>(() => ({
-    mass: 20,
-    args: [0.1, 0.08, 0.1],
-    position: [0, 0, 0],
-    rotation: [0, Math.random() * 3, 0],
-    allowSleep: true,
-    type: 'Dynamic',
-    sleepSpeedLimit: 0.1,
-    sleepTimeLimit: 0.5,
-  }));
-
-  useLayoutEffect(() => {
-    Array.from({ length: itemsNumber }).forEach((_, idx) => {
-      const gridIdx = Math.floor(idx / rowModifier);
-      grid[gridIdx].push([idx - gridIdx * rowModifier, gridIdx]);
-    });
-    Array.from({ length: itemsNumber }).forEach((_, i) => {
-      const gridIdx = Math.floor(i / rowModifier);
-      const [x, z] = grid[gridIdx][i - gridIdx * rowModifier];
-
-      api
-        .at(i)
-        .position.set(
-          initialPosition[0] + x * 0.11,
-          initialPosition[1] + 0.2,
-          initialPosition[2] + z * 0.13
-        );
-    });
-  }, [api, grid, initialPosition, itemsNumber, rowModifier]);
 
   useEvent('click', async (event: Event) => {
     event.stopPropagation();
@@ -86,15 +96,24 @@ export function Mugs({
 
     if (playerStatus === null) {
       const y = scene.getObjectByName('mug');
-      const x = raycaster.intersectObjects(y?.children || scene.children);
+      const x = raycaster.intersectObjects(
+        y?.children || scene.children,
+        true
+      );
 
       if (!x[0]) {
         return;
       }
 
       if (x[0].distance < 2) {
-        instanceId.current = x[0].instanceId;
-        setState({ playerStatus: PlayerStatus.PICKED });
+        const mugIndex = x[0].object.userData.mugIndex;
+
+        if (typeof mugIndex === 'number') {
+          instanceId.current = mugIndex;
+          setHeldMugIndex(mugIndex);
+          bodiesRef.current[mugIndex]?.setEnabled(false);
+          setState({ playerStatus: PlayerStatus.PICKED });
+        }
       }
 
       return;
@@ -104,9 +123,7 @@ export function Mugs({
       playerStatus === PlayerStatus.PICKED &&
       instanceId.current !== undefined
     ) {
-      const x = raycaster.intersectObjects(
-        scene.getObjectByName('bounds')?.children || scene.children
-      );
+      const x = intersectStaticBounds(raycaster, scene);
 
       if (!x[0]) {
         return;
@@ -115,11 +132,21 @@ export function Mugs({
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        api
-          .at(instanceId.current)
-          .position.set(point.x, point.y + 0.2, point.z);
+        const selectedMugIndex = instanceId.current;
+        const body = bodiesRef.current[selectedMugIndex];
+
+        if (body) {
+          syncMugBodyToTransform(
+            body,
+            bodyPosition.set(point.x, point.y + 0.2, point.z),
+            bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0))
+          );
+          body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
 
         instanceId.current = undefined;
+        setHeldMugIndex(undefined);
         await new Promise((res) => {
           setTimeout(res);
         });
@@ -145,16 +172,37 @@ export function Mugs({
           camera.getWorldDirection(target);
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
-          api.at(instanceId.current).velocity.set(x, y, z);
-          api
-            .at(instanceId.current)
-            .rotation.set(
-              Math.random() * 3,
-              Math.random() * 3,
-              Math.random() * 3
+          const selectedMugIndex = instanceId.current;
+          const body = bodiesRef.current?.[selectedMugIndex];
+          const heldMesh = heldMeshRef.current;
+
+          if (body) {
+            const { position, quaternion } = heldPoseHelperRef.current.compute(
+              camera,
+              [0.15, -0.15, -0.4]
             );
 
+            syncMugBodyToTransform(
+              body,
+              heldMesh?.getWorldPosition(bodyPosition) ?? position,
+              heldMesh?.getWorldQuaternion(bodyRotation) ?? quaternion
+            );
+            body.setLinvel({ x, y, z }, true);
+            body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+            body.setRotation(
+              bodyRotation.setFromEuler(
+                bodyEuler.set(
+                  Math.random() * 3,
+                  Math.random() * 3,
+                  Math.random() * 3
+                )
+              ),
+              true
+            );
+          }
+
           instanceId.current = undefined;
+          setHeldMugIndex(undefined);
           setState({ playerStatus: null });
         }
       }
@@ -163,31 +211,53 @@ export function Mugs({
 
   useFrame(() => {
     if (instanceId.current !== undefined) {
-      zCamVec.set(0.15, -0.15, -0.4);
-      const position = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      rotationDirection.normalize();
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, quaternion } = heldPoseHelperRef.current.compute(
+        camera,
+        [0.15, -0.15, -0.4]
+      );
+      const heldMesh = heldMeshRef.current;
 
-      api
-        .at(instanceId.current)
-        .position.set(position.x, position.y, position.z);
-      api.at(instanceId.current).velocity.set(0, 0, 0);
-      api.at(instanceId.current).rotation.set(0, theta + Math.PI, 0);
+      if (heldMesh) {
+        heldMesh.position.copy(position);
+        heldMesh.quaternion.copy(quaternion);
+      }
     }
   });
 
   return (
     <group name="mug">
-      <instancedMesh
+      {mugs.map((mug, idx) => (
+        <RigidBody
+          key={mug.key}
+          ref={(body) => {
+            bodiesRef.current[idx] = body;
+          }}
+          colliders={false}
+          type="dynamic"
+          mass={20}
+          canSleep
+          position={mug.position}
+          rotation={mug.rotation}
+        >
+          <CuboidCollider args={[0.05, 0.04, 0.05]} />
+          <mesh
+            castShadow
+            geometry={nodes[geometryName].geometry}
+            material={customMaterial || materials[materialName]}
+            name={`${objName}`}
+            visible={heldMugIndex !== idx}
+            userData={{ mugIndex: idx }}
+          />
+        </RigidBody>
+      ))}
+      <mesh
         castShadow
-        ref={ref}
-        args={[
-          nodes[geometryName].geometry,
-          customMaterial || materials[materialName],
-          itemsNumber,
-        ]}
-        name={`${objName}`}
+        ref={heldMeshRef}
+        geometry={nodes[geometryName].geometry}
+        material={customMaterial || materials[materialName]}
+        name={`${objName}_held`}
+        visible={heldMugIndex !== undefined}
+        raycast={() => undefined}
       />
     </group>
   );

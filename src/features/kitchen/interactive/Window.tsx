@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { a, useSpring } from '@react-spring/three';
-import { Triplet, useBox } from '@react-three/cannon';
+import {
+  CuboidCollider,
+  RapierRigidBody,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
-import { Mesh } from 'three';
 
 import { useAchievement } from '../../user/useAchievement';
 import { glassMaterial } from '../../../common/materials/materials';
@@ -11,6 +14,7 @@ import { AchievementName } from '../../../types';
 import { useKitchenGltf } from '../useKitchenGltf';
 
 const { degToRad } = THREE.MathUtils;
+type PositionTuple = [number, number, number];
 
 export function InteractiveWindow(): JSX.Element {
   const { nodes, materials, kitchenMaterial } = useKitchenGltf();
@@ -24,40 +28,66 @@ export function InteractiveWindow(): JSX.Element {
 
   const { position, geometry, scale } = nodes.window_bound;
 
-  const initialPosition = useRef(position);
+  const bodyRef = useRef<RapierRigidBody>(null);
+  const initialPosition = useRef<PositionTuple>([
+    position.x,
+    position.y,
+    position.z,
+  ]);
   const box = new THREE.Box3().setFromObject(nodes.window_bound);
-  const dimensions: Triplet = [
+  const dimensions: PositionTuple = [
     box.max.x - box.min.x,
     box.max.y - box.min.y,
     box.max.z - box.min.z,
   ];
-
-  const [ref, api] = useBox<Mesh>(() => ({
-    type: 'Static',
-    position: [...position.toArray()],
-    args: dimensions,
-  }));
+  const blockerPosition: PositionTuple = [
+    position.x,
+    position.y,
+    position.z,
+  ];
 
   useEffect(() => {
-    if (windowOpen === 1) {
-      const { x, y, z } = position;
-      api.position.set(x, y + 5, z);
-    } else if (windowOpen === 0) {
-      api.position.set(
-        initialPosition.current.x,
-        initialPosition.current.y,
-        initialPosition.current.z
-      );
-    }
-  }, [api.position, position, windowOpen]);
+    const targetPosition: PositionTuple =
+      windowOpen === 1
+        ? [position.x, position.y + 5, position.z]
+        : initialPosition.current;
+
+    bodyRef.current?.setNextKinematicTranslation({
+      x: targetPosition[0],
+      y: targetPosition[1],
+      z: targetPosition[2],
+    });
+    bodyRef.current?.setTranslation(
+      {
+        x: targetPosition[0],
+        y: targetPosition[1],
+        z: targetPosition[2],
+      },
+      true
+    );
+  }, [position, windowOpen]);
 
   const { addAchievement } = useAchievement();
 
   return (
     <group dispose={null}>
-      <mesh ref={ref} geometry={geometry} scale={scale}>
-        <meshBasicMaterial visible={false} />
-      </mesh>
+      <RigidBody
+        ref={bodyRef}
+        type="kinematicPosition"
+        colliders={false}
+        position={blockerPosition}
+      >
+        <CuboidCollider
+          args={[
+            dimensions[0] / 2,
+            dimensions[1] / 2,
+            dimensions[2] / 2,
+          ]}
+        />
+        <mesh geometry={geometry} scale={scale}>
+          <meshBasicMaterial visible={false} />
+        </mesh>
+      </RigidBody>
       <a.group
         position={[-2.99, 1.57, -5.26]}
         rotation-y={rotation}

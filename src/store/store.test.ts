@@ -33,7 +33,6 @@ test('persists achievements and preferences without transient state', () => {
       lights: 1,
       glass: false,
     },
-    pointerSpeed: '0.7',
   });
 
   const storedValue = localStorage.getItem(STORE_PERSISTENCE_KEY);
@@ -48,7 +47,6 @@ test('persists achievements and preferences without transient state', () => {
       lights: 1,
       glass: false,
     },
-    pointerSpeed: '0.7',
   });
   expect(persisted.state).not.toHaveProperty('coffeeState');
   expect(persisted.state).not.toHaveProperty('letters');

@@ -1,36 +1,69 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
 import { a, config, useSpring } from '@react-spring/three';
-import { Triplet, useBox } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
+import {
+  CuboidCollider,
+  RapierRigidBody,
+  RigidBody,
+  useRapier,
+} from '@react-three/rapier';
 import * as THREE from 'three';
 
 // import { Smoke } from '../../../common/components/Smoke';
 
 import { useAchievement } from '../../user/useAchievement';
 import { glassMaterial } from '../../../common/materials/materials';
-import { getState, setState } from '../../../store/store';
+import { getState, setState, useStore } from '../../../store/store';
 import {
   AchievementName,
   GLTFResult,
   InteractiveObjectStatus,
   PlayerStatus,
 } from '../../../types';
+import { createHeldItemPoseHelper } from '../heldItemPose';
+import { intersectStaticBounds } from '../staticBoundsRaycast';
 import { useKitchenGltf } from '../useKitchenGltf';
 
-const initialPosition: Triplet = [1.65, 1.08, -5.44];
-const grinderPosition: Triplet = [2.49, 0.98, -5.52];
+type PositionTuple = [number, number, number];
+type GripBodyType = 'dynamic' | 'kinematicPosition';
+
+const initialPosition: PositionTuple = [1.65, 1.08, -5.44];
+const grinderPosition: PositionTuple = [2.49, 0.98, -5.52];
 const { degToRad } = THREE.MathUtils;
-const expressRotation: Triplet = [0, degToRad(-60), 0];
-const grinderRotation: Triplet = [0, degToRad(-41), 0];
+const expressRotation: PositionTuple = [0, degToRad(-60), 0];
+const grinderRotation: PositionTuple = [0, degToRad(-41), 0];
 
-const grinderTrayPosition: Triplet = [2.51, 0.91, -5.3];
-const tamperPosition: Triplet = [2.49, 0.93, -5.33];
+const grinderTrayPosition: PositionTuple = [2.51, 0.91, -5.3];
+const tamperPosition: PositionTuple = [2.49, 0.93, -5.33];
 
-const zCamVec = new THREE.Vector3();
-const rotationDirection = new THREE.Vector3();
+function setNextGripTransform(
+  body: RapierRigidBody,
+  quaternion: THREE.Quaternion,
+  euler: THREE.Euler,
+  position: PositionTuple,
+  rotation: PositionTuple
+) {
+  const [x, y, z] = position;
+  const [rX, rY, rZ] = rotation;
+
+  body.setNextKinematicTranslation({ x, y, z });
+  body.setNextKinematicRotation(
+    quaternion.setFromEuler(euler.set(rX, rY, rZ))
+  );
+}
+
+function syncGripBodyToTransform(
+  body: RapierRigidBody,
+  position: THREE.Vector3,
+  quaternion: THREE.Quaternion
+) {
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  body.setRotation(quaternion, true);
+}
 
 export function Express(): JSX.Element {
   const { nodes, kitchenMaterial } = useKitchenGltf();
@@ -42,40 +75,65 @@ export function Express(): JSX.Element {
   const camera = useThree((state) => state.camera);
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
+  const coffeeState = useStore((state) => state.coffeeState);
   const { addAchievement } = useAchievement();
+  const { rapier } = useRapier();
 
   const [animated, setAnimated] = useState<
     'express' | 'grinder' | 'accessories' | 'coffee' | null
   >(null);
+  const [gripBodyType, setGripBodyType] =
+    useState<GripBodyType>('kinematicPosition');
 
   const gripStatus = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.ATTACHED_EXPRESS
   );
 
-  const [ref, api] = useBox<THREE.Group>(() => ({
-    mass: 0,
-    args: [0.1, 0.1, 0.2],
-    position: initialPosition,
-    allowSleep: false,
-    type: 'Dynamic',
-  }));
-
+  const bodyRef = useRef<RapierRigidBody>(null);
   const tamperRef = useRef<THREE.Group>(null);
-  const gripPosRef = useRef([0, 0, 0]);
-  const gripRotRef = useRef([0, 0, 0]);
+  const heldGripRef = useRef<THREE.Group>(null);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
+  const gripPosRef = useRef<PositionTuple>(initialPosition);
+  const gripRotRef = useRef<PositionTuple>([0, 0, 0]);
   const coffeePortionRef = useRef<THREE.Mesh>(null);
+  const [isGripHeld, setIsGripHeld] = useState(false);
+  const bodyQuaternion = new THREE.Quaternion();
+  const bodyEuler = new THREE.Euler();
+  const bodyPosition = new THREE.Vector3();
+  const readQuaternion = new THREE.Quaternion();
+  const hasCoffeePayload =
+    coffeeState === 'grinded' || coffeeState === 'tempered';
 
-  useEffect(() => {
-    api.position.subscribe((p) => {
-      gripPosRef.current = p;
-    });
-  });
+  const holdGripFromCamera = () => {
+    gripStatus.current = InteractiveObjectStatus.PICKED;
+    bodyRef.current?.setEnabled(false);
+    setIsGripHeld(true);
+  };
 
-  useEffect(() => {
-    api.rotation.subscribe((r) => {
-      gripRotRef.current = r;
-    });
-  });
+  const syncGripBodyToHeldVisual = () => {
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
+    }
+
+    const { position, quaternion } = heldPoseHelperRef.current.compute(camera, [
+      0.15,
+      -0.15,
+      -0.3,
+    ]);
+    const heldGrip = heldGripRef.current;
+    const syncPosition =
+      heldGrip?.getWorldPosition(bodyPosition) ?? bodyPosition.copy(position);
+    const syncRotation =
+      heldGrip?.getWorldQuaternion(bodyQuaternion) ??
+      bodyQuaternion.copy(quaternion);
+
+    syncGripBodyToTransform(body, syncPosition, syncRotation);
+    gripPosRef.current = [syncPosition.x, syncPosition.y, syncPosition.z];
+    bodyEuler.setFromQuaternion(syncRotation);
+    gripRotRef.current = [bodyEuler.x, bodyEuler.y, bodyEuler.z];
+  };
 
   const { rotation: gripExpressRotation, position: gripExpressPosition } =
     useSpring({
@@ -98,9 +156,23 @@ export function Express(): JSX.Element {
 
           setAnimated(null);
           gripStatus.current = InteractiveObjectStatus.ATTACHED_EXPRESS;
-          api.position.set(...initialPosition);
-          api.rotation.set(0, 0, 0);
-          api.mass.set(0);
+          setGripBodyType('kinematicPosition');
+          if (bodyRef.current) {
+            setNextGripTransform(
+              bodyRef.current,
+              bodyQuaternion,
+              bodyEuler,
+              [
+                initialPosition[0],
+                initialPosition[1],
+                initialPosition[2],
+              ],
+              [0, 0, 0]
+            );
+          }
+          bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+          bodyRef.current?.setAdditionalMass(0, true);
 
           if (getState().coffeeState === 'tempered') {
             setState({
@@ -137,7 +209,7 @@ export function Express(): JSX.Element {
         await next({ position: tempGripPos });
 
         setAnimated(null);
-        gripStatus.current = InteractiveObjectStatus.PICKED;
+        holdGripFromCamera();
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'grinded',
@@ -204,7 +276,7 @@ export function Express(): JSX.Element {
         });
 
         setAnimated(null);
-        gripStatus.current = InteractiveObjectStatus.PICKED;
+        holdGripFromCamera();
         setState({
           playerStatus: PlayerStatus.PICKED,
           coffeeState: 'tempered',
@@ -244,7 +316,7 @@ export function Express(): JSX.Element {
         getState().coffeeState !== 'cupReady' &&
         getState().coffeeState !== 'inProgress'
       ) {
-        gripStatus.current = InteractiveObjectStatus.PICKED;
+        holdGripFromCamera();
         setState({ playerStatus: PlayerStatus.PICKED });
 
         return;
@@ -277,7 +349,10 @@ export function Express(): JSX.Element {
       ]);
 
       if (x[0] && x[0].distance < 2 && x[0].object.name.includes('express')) {
+        syncGripBodyToHeldVisual();
         gripStatus.current = InteractiveObjectStatus.ANIMATED_EXPRESS;
+        setGripBodyType('kinematicPosition');
+        setIsGripHeld(false);
         setAnimated('express');
 
         await new Promise((res) => {
@@ -295,7 +370,10 @@ export function Express(): JSX.Element {
         x[0].object.name.includes('grinder') &&
         getState().coffeeState === null
       ) {
+        syncGripBodyToHeldVisual();
         gripStatus.current = InteractiveObjectStatus.ANIMATED_GRINDER;
+        setGripBodyType('kinematicPosition');
+        setIsGripHeld(false);
         setAnimated('grinder');
 
         await new Promise((res) => {
@@ -313,7 +391,10 @@ export function Express(): JSX.Element {
         x[0].object.name.includes('accessories') &&
         getState().coffeeState === 'grinded'
       ) {
+        syncGripBodyToHeldVisual();
         gripStatus.current = InteractiveObjectStatus.ANIMATED_ACCESSORIES;
+        setGripBodyType('kinematicPosition');
+        setIsGripHeld(false);
         setAnimated('accessories');
 
         await new Promise((res) => {
@@ -325,16 +406,22 @@ export function Express(): JSX.Element {
         return;
       }
 
-      const nonInteractiveSceneObj =
-        scene.getObjectByName('bounds')?.children || [];
+      const y = intersectStaticBounds(raycaster, scene);
 
-      const y = raycaster.intersectObjects([...nonInteractiveSceneObj]);
-
-      if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
+      if (y[0] && y[0].distance < 2) {
         const { point } = y[0];
-        api.mass.set(3);
-        api.position.set(point.x, point.y + 0.2, point.z);
+        syncGripBodyToHeldVisual();
+        setGripBodyType('dynamic');
+        bodyRef.current?.setBodyType(rapier.RigidBodyType.Dynamic, true);
+        bodyRef.current?.setTranslation(
+          { x: point.x, y: point.y + 0.2, z: point.z },
+          true
+        );
+        bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAdditionalMass(3, true);
         gripStatus.current = undefined;
+        setIsGripHeld(false);
         await new Promise((res) => {
           setTimeout(res);
         });
@@ -345,24 +432,37 @@ export function Express(): JSX.Element {
   });
 
   useFrame(() => {
-    if (gripStatus.current === InteractiveObjectStatus.ANIMATED_EXPRESS) {
-      api.rotation.set(...(gripExpressRotation.get() as Triplet));
-      api.position.set(...(gripExpressPosition.get() as Triplet));
-      api.mass.set(0);
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
     }
 
-    if (gripStatus.current === InteractiveObjectStatus.ATTACHED_EXPRESS) {
-      api.rotation.set(0, 0, 0);
-      api.velocity.set(0, 0, 0);
-      api.mass.set(0);
+    const position = body.translation();
+    const rotation = body.rotation();
+    gripPosRef.current = [position.x, position.y, position.z];
+    readQuaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
+    bodyEuler.setFromQuaternion(readQuaternion);
+    gripRotRef.current = [bodyEuler.x, bodyEuler.y, bodyEuler.z];
+
+    if (gripStatus.current === InteractiveObjectStatus.ANIMATED_EXPRESS) {
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        gripExpressPosition.get() as PositionTuple,
+        gripExpressRotation.get() as PositionTuple
+      );
     }
 
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_GRINDER) {
-      const [rX, rY, rZ] = gripGrinderRotation.get();
-      const [pX, pY, pZ] = gripGrinderPosition.get();
-      api.rotation.set(rX, rY, rZ);
-      api.position.set(pX, pY, pZ);
-      api.mass.set(0);
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        gripGrinderPosition.get() as PositionTuple,
+        gripGrinderRotation.get() as PositionTuple
+      );
       coffeePortionRef.current?.scale.set(
         scale.get(),
         scale.get(),
@@ -371,47 +471,82 @@ export function Express(): JSX.Element {
     }
 
     if (gripStatus.current === InteractiveObjectStatus.ANIMATED_ACCESSORIES) {
-      const [rX, rY, rZ] = accGrinderRotation.get();
-      const [pX, pY, pZ] = accGrinderPosition.get();
       const [tpX, tpY, tpZ] = tamperAnimationPos.get();
-      api.rotation.set(rX, rY, rZ);
-      api.position.set(pX, pY, pZ);
-      api.mass.set(0);
+      setNextGripTransform(
+        body,
+        bodyQuaternion,
+        bodyEuler,
+        accGrinderPosition.get() as PositionTuple,
+        accGrinderRotation.get() as PositionTuple
+      );
       tamperRef.current?.position.set(tpX, tpY, tpZ);
     }
 
     if (gripStatus.current === InteractiveObjectStatus.PICKED) {
-      zCamVec.set(0.15, -0.15, -0.3);
-      const playerPosition = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, quaternion } = heldPoseHelperRef.current.compute(camera, [
+        0.15,
+        -0.15,
+        -0.3,
+      ]);
+      const heldGrip = heldGripRef.current;
 
-      api.position.set(...playerPosition.toArray());
-      api.mass.set(0);
-      api.rotation.set(0, theta + Math.PI, 0);
+      if (heldGrip) {
+        heldGrip.position.copy(position);
+        heldGrip.quaternion.copy(quaternion);
+      }
     }
   });
 
   return (
     <group dispose={null}>
-      <a.group name="int-grip" ref={ref}>
+      <RigidBody
+        ref={bodyRef}
+        type={gripBodyType}
+        colliders={false}
+        mass={0}
+        canSleep={false}
+        position={initialPosition}
+      >
+        <CuboidCollider args={[0.05, 0.05, 0.1]} />
+        <a.group name="int-grip">
+          <mesh
+            castShadow
+            name="grip-body"
+            geometry={accNodes.kolba.geometry}
+            material={accMaterials.coffeeAccMaterial}
+            visible={!isGripHeld}
+          />
+          <mesh
+            scale={0}
+            visible={!isGripHeld}
+            ref={coffeePortionRef}
+            geometry={accNodes.coffeePortion.geometry}
+            material={accMaterials.coffeeAccMaterial}
+          />
+          <mesh name="grip-dummy" visible={false}>
+            <meshStandardMaterial />
+            <boxGeometry args={[0.1, 0.15, 0.3]} />
+          </mesh>
+        </a.group>
+      </RigidBody>
+      <group
+        ref={heldGripRef}
+        name="int-grip-held"
+        visible={isGripHeld}
+        raycast={() => undefined}
+      >
         <mesh
           castShadow
-          name="grip-body"
+          name="grip-body-held"
           geometry={accNodes.kolba.geometry}
           material={accMaterials.coffeeAccMaterial}
         />
         <mesh
-          scale={0}
-          ref={coffeePortionRef}
+          visible={hasCoffeePayload}
           geometry={accNodes.coffeePortion.geometry}
           material={accMaterials.coffeeAccMaterial}
         />
-        <mesh name="grip-dummy" visible={false}>
-          <meshStandardMaterial />
-          <boxBufferGeometry args={[0.1, 0.15, 0.3]} />
-        </mesh>
-      </a.group>
+      </group>
       <group name="express">
         <mesh
           geometry={nodes.bake_express.geometry}

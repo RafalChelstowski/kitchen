@@ -1,10 +1,13 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useEvent } from 'react-use';
 
-import { useCylinder } from '@react-three/cannon';
 import { useGLTF } from '@react-three/drei';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
-import { Mesh } from 'three';
+import {
+  CylinderCollider,
+  RapierRigidBody,
+  RigidBody,
+} from '@react-three/rapier';
 import * as THREE from 'three';
 
 import { useAchievement } from '../../user/useAchievement';
@@ -15,37 +18,79 @@ import {
   InteractiveObjectStatus,
   PlayerStatus,
 } from '../../../types';
+import { createHeldItemPoseHelper } from '../heldItemPose';
+import { intersectStaticBounds } from '../staticBoundsRaycast';
 
-const HIDDEN_POSITION = [2.85, 5, -3.7];
-const FRIDGE_POSITION = [3.0, 0.63, -3.63];
+type PositionTuple = [number, number, number];
+
+const HIDDEN_POSITION: PositionTuple = [2.85, 5, -3.7];
+const INITIAL_POSITION: PositionTuple = [0, 1, 0];
+const FRIDGE_POSITION: PositionTuple = [3.0, 0.63, -3.63];
+const THROW_FORWARD_SPEED = 13;
+const THROW_UPWARD_VELOCITY = 2;
+const HARNAS_MASS = 0.35;
+const HARNAS_LINEAR_DAMPING = 0.45;
+const HARNAS_ANGULAR_DAMPING = 2.5;
+const HARNAS_FRICTION = 0.9;
+const HARNAS_RESTITUTION = 0.12;
 const { degToRad } = THREE.MathUtils;
+
+function objectOrParentHasName(
+  object: THREE.Object3D | undefined,
+  name: string
+) {
+  let current = object;
+
+  while (current) {
+    if (current.name === name) {
+      return true;
+    }
+
+    current = current.parent ?? undefined;
+  }
+
+  return false;
+}
+
+function syncHarnasBodyToTransform(
+  body: RapierRigidBody,
+  position: THREE.Vector3,
+  quaternion: THREE.Quaternion
+) {
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  body.setRotation(quaternion, true);
+}
 
 export function Harnas(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
   const { nodes, materials } = useGLTF('/can_uv.gltf') as unknown as GLTFResult;
-  const dummyRef = useRef<Mesh>(null);
+  const bodyRef = useRef<RapierRigidBody>(null);
+  const dummyRef = useRef<THREE.Mesh>(null);
+  const heldMeshRef = useRef<THREE.Mesh>(null);
+  const heldPoseHelperRef = useRef(createHeldItemPoseHelper());
+  const initialRotation = useRef<PositionTuple>([
+    Math.random(),
+    Math.random(),
+    Math.random(),
+  ]);
   const { addAchievement } = useAchievement();
-
-  const [ref, api] = useCylinder<Mesh>(() => ({
-    mass: 1,
-    args: [0.06, 0.06, 0.14, 12],
-    position: [0, 1, 0],
-    rotation: [Math.random(), Math.random(), Math.random()],
-    allowSleep: false,
-    onCollideBegin: (e) => {
-      if (e.body.name === 'floor') {
-        addAchievement(AchievementName.HARNAS);
-      }
-    },
-  }));
 
   const harnasStatus = useRef<InteractiveObjectStatus | undefined>(
     InteractiveObjectStatus.HIDDEN
   );
+  const [isHarnasHeld, setIsHarnasHeld] = useState(false);
 
   const [initialX, initialY, initialZ] = FRIDGE_POSITION;
+
+  const pickUpHarnas = () => {
+    harnasStatus.current = InteractiveObjectStatus.PICKED;
+    bodyRef.current?.setEnabled(false);
+    setIsHarnasHeld(true);
+    setState({ playerStatus: PlayerStatus.PICKED });
+  };
 
   useEvent('click', async (event: Event) => {
     event.stopPropagation();
@@ -62,8 +107,7 @@ export function Harnas(): JSX.Element {
       }
 
       if (x[0].distance < 2) {
-        harnasStatus.current = InteractiveObjectStatus.PICKED;
-        setState({ playerStatus: PlayerStatus.PICKED });
+        pickUpHarnas();
       }
 
       return;
@@ -73,9 +117,7 @@ export function Harnas(): JSX.Element {
       playerStatus === PlayerStatus.PICKED &&
       harnasStatus.current === InteractiveObjectStatus.PICKED
     ) {
-      const x = raycaster.intersectObjects(
-        scene.getObjectByName('bounds')?.children || scene.children
-      );
+      const x = intersectStaticBounds(raycaster, scene);
 
       if (!x[0]) {
         return;
@@ -83,8 +125,20 @@ export function Harnas(): JSX.Element {
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        api.position.set(point.x, point.y + 0.2, point.z);
+        const body = bodyRef.current;
+
+        if (body) {
+          syncHarnasBodyToTransform(
+            body,
+            bodyPosition.set(point.x, point.y + 0.2, point.z),
+            bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0))
+          );
+          body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
+
         harnasStatus.current = undefined;
+        setIsHarnasHeld(false);
 
         await new Promise((res) => {
           setTimeout(res);
@@ -105,32 +159,40 @@ export function Harnas(): JSX.Element {
         setTimeout(res, 20);
       });
 
-      harnasStatus.current = InteractiveObjectStatus.PICKED;
-      setState({ playerStatus: PlayerStatus.PICKED });
+      pickUpHarnas();
     }
   };
 
-  const zCamVec = new THREE.Vector3();
-  const rotationDirection = new THREE.Vector3();
+  const bodyRotation = new THREE.Quaternion();
+  const bodyEuler = new THREE.Euler();
+  const bodyPosition = new THREE.Vector3();
 
   useFrame(() => {
+    const body = bodyRef.current;
+
+    if (!body) {
+      return;
+    }
+
     if (harnasStatus.current === InteractiveObjectStatus.HIDDEN) {
       const [hiddenX, hiddenY, hiddenZ] = HIDDEN_POSITION;
-      api.position.set(hiddenX, hiddenY, hiddenZ);
-      api.velocity.set(0, 0, 0);
-      api.rotation.set(0, 0, 0);
+      body.setTranslation({ x: hiddenX, y: hiddenY, z: hiddenZ }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.setRotation(bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0)), true);
     }
 
     if (harnasStatus.current === InteractiveObjectStatus.PICKED) {
-      zCamVec.set(0.15, -0.15, -0.4);
-      const position = camera.localToWorld(zCamVec);
-      camera.getWorldDirection(rotationDirection);
-      rotationDirection.normalize();
-      const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
+      const { position, quaternion } = heldPoseHelperRef.current.compute(
+        camera,
+        [0.15, -0.15, -0.4]
+      );
+      const heldMesh = heldMeshRef.current;
 
-      api.position.set(position.x, position.y, position.z);
-      api.velocity.set(0, 0, 0);
-      api.rotation.set(0, theta + Math.PI, 0);
+      if (heldMesh) {
+        heldMesh.position.copy(position);
+        heldMesh.quaternion.copy(quaternion);
+      }
     }
   });
 
@@ -141,25 +203,36 @@ export function Harnas(): JSX.Element {
 
     if (key === ' ') {
       if (harnasStatus.current === InteractiveObjectStatus.PICKED) {
-        const camPosition = new THREE.Vector3();
-        const position = camera.getWorldPosition(camPosition);
         const target = new THREE.Vector3();
-        const targetMesh = raycaster.intersectObjects(scene.children)?.[0];
+        const { position, quaternion } = heldPoseHelperRef.current.compute(
+          camera,
+          [0.15, -0.15, -0.4]
+        );
 
-        if (targetMesh) {
-          const distance = position.distanceTo(targetMesh.point);
-          camera.getWorldDirection(target);
-          const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 15));
+        camera.getWorldDirection(target);
+        target.normalize().multiplyScalar(THROW_FORWARD_SPEED);
 
-          api.velocity.set(x, y, z);
-          api.rotation.set(
-            Math.random() * 3,
-            Math.random() * 3,
-            Math.random() * 3
+        bodyRef.current?.setEnabled(true);
+        if (bodyRef.current) {
+          const heldMesh = heldMeshRef.current;
+
+          syncHarnasBodyToTransform(
+            bodyRef.current,
+            heldMesh?.getWorldPosition(bodyPosition) ?? position,
+            heldMesh?.getWorldQuaternion(bodyRotation) ?? quaternion
           );
-          setState({ playerStatus: null });
-          harnasStatus.current = undefined;
         }
+        bodyRef.current?.setLinvel(
+          {
+            x: target.x,
+            y: target.y + THROW_UPWARD_VELOCITY,
+            z: target.z,
+          },
+          true
+        );
+        setState({ playerStatus: null });
+        harnasStatus.current = undefined;
+        setIsHarnasHeld(false);
       }
     }
   });
@@ -167,15 +240,50 @@ export function Harnas(): JSX.Element {
   return (
     <>
       <group name="harnas">
-        <mesh
-          castShadow
-          ref={ref}
-          name="harnas_real"
-          material={materials.harnasblue}
-          geometry={nodes.Cylinder.geometry}
-          scale={0.7}
-        />
+        <RigidBody
+          ref={bodyRef}
+          type="dynamic"
+          colliders={false}
+          mass={HARNAS_MASS}
+          linearDamping={HARNAS_LINEAR_DAMPING}
+          angularDamping={HARNAS_ANGULAR_DAMPING}
+          canSleep
+          position={INITIAL_POSITION}
+          rotation={initialRotation.current}
+        >
+          <CylinderCollider
+            args={[0.07, 0.06]}
+            friction={HARNAS_FRICTION}
+            restitution={HARNAS_RESTITUTION}
+            onCollisionEnter={({ other }) => {
+              if (
+                objectOrParentHasName(other.colliderObject, 'floor') ||
+                objectOrParentHasName(other.rigidBodyObject, 'floor')
+              ) {
+                addAchievement(AchievementName.HARNAS);
+              }
+            }}
+          />
+          <mesh
+            castShadow
+            name="harnas_real"
+            material={materials.harnasblue}
+            geometry={nodes.Cylinder.geometry}
+            visible={!isHarnasHeld}
+            scale={0.7}
+          />
+        </RigidBody>
       </group>
+      <mesh
+        castShadow
+        ref={heldMeshRef}
+        name="harnas_held"
+        material={materials.harnasblue}
+        geometry={nodes.Cylinder.geometry}
+        visible={isHarnasHeld}
+        raycast={() => undefined}
+        scale={0.7}
+      />
       <mesh
         castShadow
         ref={dummyRef}

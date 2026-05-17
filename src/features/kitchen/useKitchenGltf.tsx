@@ -15,16 +15,19 @@ export function useKitchenGltf(): UseKitchenGltf {
   ) as unknown as GLTFResult;
   const texture = useTexture('/elements.jpg');
   texture.flipY = false;
-  texture.encoding = THREE.sRGBEncoding;
+  texture.colorSpace = THREE.SRGBColorSpace;
 
   const normalMap = useTexture('/elements_normal.jpg');
   normalMap.flipY = false;
+  normalMap.colorSpace = THREE.NoColorSpace;
 
   const metalMap = useTexture('/elements_metalness.jpg');
   metalMap.flipY = false;
+  metalMap.colorSpace = THREE.NoColorSpace;
 
   const roughnessMap = useTexture('/elements_roughness.jpg');
   roughnessMap.flipY = false;
+  roughnessMap.colorSpace = THREE.NoColorSpace;
 
   const kitchenMaterial = useMemo(
     () => (

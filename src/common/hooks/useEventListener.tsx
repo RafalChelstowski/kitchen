@@ -7,7 +7,7 @@ export function useEventListener<T>(
   handler: (event: Event & T) => void,
   element = window
 ): void {
-  const savedHandler = useRef<Function>();
+  const savedHandler = useRef<Function>(() => undefined);
 
   useEffect(() => {
     savedHandler.current = handler;
