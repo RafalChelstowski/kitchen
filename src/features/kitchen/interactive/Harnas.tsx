@@ -51,14 +51,13 @@ function objectOrParentHasName(
   return false;
 }
 
-function setHarnasBodyTransform(
+function syncHarnasBodyToTransform(
   body: RapierRigidBody,
-  quaternion: THREE.Quaternion,
-  position: PositionTuple
+  position: THREE.Vector3,
+  quaternion: THREE.Quaternion
 ) {
-  const [x, y, z] = position;
-
-  body.setTranslation({ x, y, z }, true);
+  body.setEnabled(true);
+  body.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
   body.setRotation(quaternion, true);
 }
 
@@ -127,13 +126,18 @@ export function Harnas(): JSX.Element {
 
       if (x[0].distance < 2) {
         const { point } = x[0];
-        bodyRef.current?.setEnabled(true);
-        bodyRef.current?.setTranslation(
-          { x: point.x, y: point.y + 0.2, z: point.z },
-          true
-        );
-        bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
-        bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        const body = bodyRef.current;
+
+        if (body) {
+          syncHarnasBodyToTransform(
+            body,
+            bodyPosition.set(point.x, point.y + 0.2, point.z),
+            bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0))
+          );
+          body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
+
         harnasStatus.current = undefined;
         setIsHarnasHeld(false);
 
@@ -162,6 +166,7 @@ export function Harnas(): JSX.Element {
 
   const bodyRotation = new THREE.Quaternion();
   const bodyEuler = new THREE.Euler();
+  const bodyPosition = new THREE.Vector3();
 
   useFrame(() => {
     const body = bodyRef.current;
@@ -210,10 +215,12 @@ export function Harnas(): JSX.Element {
 
         bodyRef.current?.setEnabled(true);
         if (bodyRef.current) {
-          setHarnasBodyTransform(
+          const heldMesh = heldMeshRef.current;
+
+          syncHarnasBodyToTransform(
             bodyRef.current,
-            quaternion,
-            [position.x, position.y, position.z]
+            heldMesh?.getWorldPosition(bodyPosition) ?? position,
+            heldMesh?.getWorldQuaternion(bodyRotation) ?? quaternion
           );
         }
         bodyRef.current?.setLinvel(
@@ -222,16 +229,6 @@ export function Harnas(): JSX.Element {
             y: target.y + THROW_UPWARD_VELOCITY,
             z: target.z,
           },
-          true
-        );
-        bodyRef.current?.setRotation(
-          bodyRotation.setFromEuler(
-            bodyEuler.set(
-              Math.random() * 3,
-              Math.random() * 3,
-              Math.random() * 3
-            )
-          ),
           true
         );
         setState({ playerStatus: null });
