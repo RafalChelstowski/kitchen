@@ -102,11 +102,6 @@ export function Express(): JSX.Element {
 
   const holdGripFromCamera = () => {
     gripStatus.current = InteractiveObjectStatus.PICKED;
-    setGripBodyType('kinematicPosition');
-    bodyRef.current?.setBodyType(
-      rapier.RigidBodyType.KinematicPositionBased,
-      true
-    );
     bodyRef.current?.setEnabled(false);
     setIsGripHeld(true);
   };

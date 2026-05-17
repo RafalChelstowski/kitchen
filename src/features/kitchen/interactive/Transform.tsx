@@ -79,11 +79,6 @@ export function Transform(): JSX.Element {
 
   const pickUpMug = () => {
     status.current = InteractiveObjectStatus.PICKED;
-    setMugBodyType('kinematicPosition');
-    bodyRef.current?.setBodyType(
-      rapier.RigidBodyType.KinematicPositionBased,
-      true
-    );
     bodyRef.current?.setEnabled(false);
     setIsMugHeld(true);
     setState({ playerStatus: PlayerStatus.PICKED });
