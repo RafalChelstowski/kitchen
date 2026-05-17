@@ -2,7 +2,7 @@
 
 - [x] Move achievement hook out of src/api | AC: `useAchievement` lives under a local feature/store path, all imports use the new path, and `src/api/hooks/useAchievement.ts` no longer exists
 - [x] Delete remaining local auth API stub | AC: `src/api/index.ts` is removed, no `userApi` symbol remains, and source search for `userApi|doSign|doPassword|auth` under `src` returns no app-code matches
-- [ ] Remove obsolete auth route constants | AC: `src/features/Nav.tsx` exports only active routes, and `/signup`, `/signin`, `/signout`, `/account`, and `/pw-forget` no longer appear in source
+- [x] Remove obsolete auth route constants | AC: `src/features/Nav.tsx` exports only active routes, and `/signup`, `/signin`, `/signout`, `/account`, and `/pw-forget` no longer appear in source
 - [ ] Derive achievement total from catalog | AC: Achievements page has no hard-coded `achievementTotal = 9`, denominator comes from `achievementCatalog`, and existing tests still pass
 - [ ] Remove Firebase cleanup residue | AC: `src/index.css` has no `.firebase-emulator-warning`, README no longer claims Firebase/account/global leaderboard support, and source/README search for `firebase|emulator|leaderboard` returns no stale matches
 - [ ] Consolidate Tailwind 4 theme source | AC: custom `tViolet` and `tGreen` colors are defined in one place, redundant Tailwind config/theme duplication is removed, and `pnpm build` compiles existing classes
