@@ -24,6 +24,7 @@ import {
   PlayerStatus,
 } from '../../../types';
 import { createHeldItemPoseHelper } from '../heldItemPose';
+import { intersectStaticBounds } from '../staticBoundsRaycast';
 import { useKitchenGltf } from '../useKitchenGltf';
 
 type PositionTuple = [number, number, number];
@@ -402,12 +403,9 @@ export function Express(): JSX.Element {
         return;
       }
 
-      const nonInteractiveSceneObj =
-        scene.getObjectByName('bounds')?.children || [];
+      const y = intersectStaticBounds(raycaster, scene);
 
-      const y = raycaster.intersectObjects([...nonInteractiveSceneObj]);
-
-      if (y[0] && y[0].distance < 2 && y[0].object.name.includes('static')) {
+      if (y[0] && y[0].distance < 2) {
         const { point } = y[0];
         syncGripBodyToHeldVisual();
         setGripBodyType('dynamic');

@@ -19,6 +19,7 @@ import {
   PlayerStatus,
 } from '../../../types';
 import { createHeldItemPoseHelper } from '../heldItemPose';
+import { intersectStaticBounds } from '../staticBoundsRaycast';
 
 type PositionTuple = [number, number, number];
 type MugBodyType = 'dynamic' | 'kinematicPosition';
@@ -141,14 +142,11 @@ export function Transform(): JSX.Element {
         return;
       }
 
-      const nonInteractiveSceneObj =
-        scene.getObjectByName('bounds')?.children || [];
-      const y = raycaster.intersectObjects([...nonInteractiveSceneObj]);
+      const y = intersectStaticBounds(raycaster, scene);
 
       if (
         y[0] &&
         y[0].distance < 2 &&
-        y[0].object.name.includes('static') &&
         status.current === InteractiveObjectStatus.PICKED
       ) {
         const { point } = y[0];

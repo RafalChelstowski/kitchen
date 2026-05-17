@@ -19,6 +19,7 @@ import {
   PlayerStatus,
 } from '../../../types';
 import { createHeldItemPoseHelper } from '../heldItemPose';
+import { intersectStaticBounds } from '../staticBoundsRaycast';
 
 type PositionTuple = [number, number, number];
 
@@ -116,9 +117,7 @@ export function Harnas(): JSX.Element {
       playerStatus === PlayerStatus.PICKED &&
       harnasStatus.current === InteractiveObjectStatus.PICKED
     ) {
-      const x = raycaster.intersectObjects(
-        scene.getObjectByName('bounds')?.children || scene.children
-      );
+      const x = intersectStaticBounds(raycaster, scene);
 
       if (!x[0]) {
         return;

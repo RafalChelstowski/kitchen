@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { getState, setState } from '../../store/store';
 import { GLTFResult, PlayerStatus } from '../../types';
 import { createHeldItemPoseHelper } from './heldItemPose';
+import { intersectStaticBounds } from './staticBoundsRaycast';
 
 type PositionTuple = [number, number, number];
 type RotationTuple = [number, number, number];
@@ -122,9 +123,7 @@ export function Mugs({
       playerStatus === PlayerStatus.PICKED &&
       instanceId.current !== undefined
     ) {
-      const x = raycaster.intersectObjects(
-        scene.getObjectByName('bounds')?.children || scene.children
-      );
+      const x = intersectStaticBounds(raycaster, scene);
 
       if (!x[0]) {
         return;
