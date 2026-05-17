@@ -11,6 +11,12 @@ previous `@react-three/cannon` dependency and source imports have been removed.
   prop, alongside the existing Drei `Stats` view.
 - `src/App.test.tsx` mocks Rapier `Physics` so the smoke test still verifies
   React rendering without loading the real physics world.
+- The workspace overrides `@react-three/rapier`'s
+  `@dimforge/rapier3d-compat` dependency to `0.19.3`. That package still
+  contains generated wrapper warnings for callers using deprecated WASM init
+  parameters, but `@react-three/rapier@2.2.0` calls `init()` without arguments;
+  any matching wrapper text is upstream generated-code noise rather than app
+  initialization code.
 
 ## Migrated Bodies
 
