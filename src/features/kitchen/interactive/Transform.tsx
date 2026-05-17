@@ -19,10 +19,27 @@ import {
 } from '../../../types';
 
 type PositionTuple = [number, number, number];
+type MugBodyType = 'dynamic' | 'kinematicPosition';
 
 const HIDDEN_POSITION: PositionTuple = [0.2, 5.35, -3.8];
 const CUPBOARD_POSITION: PositionTuple = [-0.1, 0.63, -3.8];
 const EXPRESS_POSITION: PositionTuple = [1.66, 0.99, -5.43];
+
+function setNextMugTransform(
+  body: RapierRigidBody,
+  quaternion: THREE.Quaternion,
+  euler: THREE.Euler,
+  position: PositionTuple,
+  rotation: PositionTuple
+) {
+  const [x, y, z] = position;
+  const [rX, rY, rZ] = rotation;
+
+  body.setNextKinematicTranslation({ x, y, z });
+  body.setNextKinematicRotation(
+    quaternion.setFromEuler(euler.set(rX, rY, rZ))
+  );
+}
 
 export function Transform(): JSX.Element {
   const raycaster = useThree((state) => state.raycaster);
@@ -41,6 +58,8 @@ export function Transform(): JSX.Element {
 
   const [transformed, setTransformed] = useState(false);
   const [animated, setAnimated] = useState(false);
+  const [mugBodyType, setMugBodyType] =
+    useState<MugBodyType>('kinematicPosition');
 
   useEvent('click', async (event: Event) => {
     event.stopPropagation();
@@ -66,6 +85,7 @@ export function Transform(): JSX.Element {
 
       if (x[0].distance < 2) {
         status.current = InteractiveObjectStatus.PICKED;
+        setMugBodyType('kinematicPosition');
         setState({ playerStatus: PlayerStatus.PICKED });
       }
 
@@ -86,6 +106,7 @@ export function Transform(): JSX.Element {
         getState().coffeeState === 'gripAttached'
       ) {
         status.current = InteractiveObjectStatus.ANIMATED;
+        setMugBodyType('kinematicPosition');
         setAnimated(true);
 
         await new Promise((res) => {
@@ -108,10 +129,13 @@ export function Transform(): JSX.Element {
         status.current === InteractiveObjectStatus.PICKED
       ) {
         const { point } = y[0];
+        setMugBodyType('dynamic');
         bodyRef.current?.setTranslation(
           { x: point.x, y: point.y + 0.2, z: point.z },
           true
         );
+        bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
         status.current = undefined;
         // setState({ playerStatus: null });
         bodyRef.current?.setAdditionalMass(1, true);
@@ -136,6 +160,7 @@ export function Transform(): JSX.Element {
       });
 
       status.current = InteractiveObjectStatus.PICKED;
+      setMugBodyType('kinematicPosition');
       setState({ playerStatus: PlayerStatus.PICKED });
     }
   };
@@ -170,6 +195,19 @@ export function Transform(): JSX.Element {
         setTransformed(false);
         setAnimated(false);
         status.current = InteractiveObjectStatus.ATTACHED_EXPRESS;
+        setMugBodyType('kinematicPosition');
+        if (bodyRef.current) {
+          setNextMugTransform(
+            bodyRef.current,
+            bodyRotation,
+            bodyEuler,
+            EXPRESS_POSITION,
+            [0, 0, 0]
+          );
+        }
+        bodyRef.current?.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        bodyRef.current?.setAdditionalMass(0, true);
         setState({ playerStatus: null, coffeeState: 'cupReady' });
       }
     },
@@ -190,12 +228,9 @@ export function Transform(): JSX.Element {
     posRef.current = [position.x, position.y, position.z];
 
     if (status.current === InteractiveObjectStatus.HIDDEN) {
-      const [hiddenX, hiddenY, hiddenZ] = HIDDEN_POSITION;
-      body.setTranslation({ x: hiddenX, y: hiddenY, z: hiddenZ }, true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setRotation(bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0)), true);
-      body.setAdditionalMass(0, true);
+      setNextMugTransform(body, bodyRotation, bodyEuler, HIDDEN_POSITION, [
+        0, 0, 0,
+      ]);
     }
 
     if (status.current === InteractiveObjectStatus.PICKED) {
@@ -205,35 +240,29 @@ export function Transform(): JSX.Element {
       rotationDirection.normalize();
       const theta = Math.atan2(rotationDirection.x, rotationDirection.z);
 
-      body.setTranslation(
-        { x: position.x, y: position.y, z: position.z },
-        true
+      setNextMugTransform(
+        body,
+        bodyRotation,
+        bodyEuler,
+        [position.x, position.y, position.z],
+        [0, theta + Math.PI, 0]
       );
-      body.setRotation(
-        bodyRotation.setFromEuler(bodyEuler.set(0, theta + Math.PI, 0)),
-        true
-      );
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
     }
 
     if (status.current === InteractiveObjectStatus.ANIMATED) {
-      const [x, y, z] = aPosition.get() as PositionTuple;
-      body.setTranslation({ x, y, z }, true);
-      body.setRotation(bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0)), true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
+      setNextMugTransform(
+        body,
+        bodyRotation,
+        bodyEuler,
+        aPosition.get() as PositionTuple,
+        [0, 0, 0]
+      );
     }
 
     if (status.current === InteractiveObjectStatus.ATTACHED_EXPRESS) {
-      const [x, y, z] = EXPRESS_POSITION;
-      body.setTranslation({ x, y, z }, true);
-      body.setRotation(bodyRotation.setFromEuler(bodyEuler.set(0, 0, 0)), true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAdditionalMass(0, true);
+      setNextMugTransform(body, bodyRotation, bodyEuler, EXPRESS_POSITION, [
+        0, 0, 0,
+      ]);
     }
   });
 
@@ -254,6 +283,7 @@ export function Transform(): JSX.Element {
           camera.getWorldDirection(target);
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
+          setMugBodyType('dynamic');
           bodyRef.current?.setLinvel({ x, y, z }, true);
           bodyRef.current?.setAdditionalMass(1, true);
           bodyRef.current?.setRotation(
@@ -282,7 +312,7 @@ export function Transform(): JSX.Element {
     <>
       <RigidBody
         ref={bodyRef}
-        type="dynamic"
+        type={mugBodyType}
         colliders={false}
         mass={0}
         canSleep={false}
