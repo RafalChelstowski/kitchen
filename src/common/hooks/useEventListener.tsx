@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable consistent-return */
 import { useEffect, useRef } from 'react';
 
 export function useEventListener<T>(
@@ -7,7 +5,7 @@ export function useEventListener<T>(
   handler: (event: Event & T) => void,
   element = window
 ): void {
-  const savedHandler = useRef<Function>(() => undefined);
+  const savedHandler = useRef<(event: Event & T) => void>(() => undefined);
 
   useEffect(() => {
     savedHandler.current = handler;
@@ -20,7 +18,8 @@ export function useEventListener<T>(
       return;
     }
 
-    const eventListener = (event: Event) => savedHandler?.current?.(event);
+    const eventListener = (event: Event) =>
+      savedHandler.current(event as Event & T);
     element.addEventListener(eventName, eventListener);
 
     return () => {
