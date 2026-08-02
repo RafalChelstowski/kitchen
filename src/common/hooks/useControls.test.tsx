@@ -57,17 +57,25 @@ test.each(movementKeys)(
   }
 );
 
-test('ignores movement key events while pointer lock is inactive', () => {
-  render(<ControlsHarness />);
+test.each(movementKeys)(
+  'ignores $key keydown and keyup while pointer lock is inactive',
+  ({ key, control }) => {
+    setState({ isLocked: false });
+    render(<ControlsHarness />);
 
-  movementKeys.forEach(({ key }) => {
     fireEvent.keyDown(window, { key });
     expect(useControlsStore.getState()).toEqual(emptyControls);
 
+    const controlsBeforeKeyUp = {
+      ...emptyControls,
+      [control]: true,
+    };
+    useControlsStore.setState(controlsBeforeKeyUp);
+
     fireEvent.keyUp(window, { key });
-    expect(useControlsStore.getState()).toEqual(emptyControls);
-  });
-});
+    expect(useControlsStore.getState()).toEqual(controlsBeforeKeyUp);
+  }
+);
 
 test.each(movementKeys)('normalizes uppercase $key movement keys', ({ key, control }) => {
   setState({ isLocked: true });
