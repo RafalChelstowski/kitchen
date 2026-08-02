@@ -84,9 +84,15 @@ export function createFrameController(
 /**
  * Creates the `useFrame` half of a fiber module mock.
  */
-export function createUseFrameMock(controller: FrameController) {
+export function createUseFrameMock(
+  controller: FrameController
+): (callback: TestFrameCallback) => void {
   return (callback: TestFrameCallback) => {
-    useLayoutEffect(() => controller.subscribe(callback), [callback]);
+    useLayoutEffect(() => {
+      const unsubscribe = controller.subscribe(callback);
+
+      return unsubscribe;
+    }, [callback]);
   };
 }
 
