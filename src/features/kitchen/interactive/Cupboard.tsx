@@ -42,7 +42,7 @@ export function Cupboard(): JSX.Element {
       <mesh
         geometry={nodes.cupboard.geometry}
         material={nodes.cupboard.material}
-        position={nodes.cupboard.position}
+        position={[...nodes.cupboard.position.toArray()]}
       />
     </>
   );
