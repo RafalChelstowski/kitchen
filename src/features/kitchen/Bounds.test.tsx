@@ -10,6 +10,25 @@ import {
 const HARD_SURFACE_FRICTION = 0.85;
 const HARD_SURFACE_RESTITUTION = 0.05;
 
+function getOrientedBoxWorldDimensions(
+  halfExtents: THREE.Vector3,
+  rotation: THREE.Euler
+): THREE.Vector3 {
+  const { elements } = new THREE.Matrix4().makeRotationFromEuler(rotation);
+
+  return new THREE.Vector3(
+    Math.abs(elements[0]) * halfExtents.x +
+      Math.abs(elements[4]) * halfExtents.y +
+      Math.abs(elements[8]) * halfExtents.z,
+    Math.abs(elements[1]) * halfExtents.x +
+      Math.abs(elements[5]) * halfExtents.y +
+      Math.abs(elements[9]) * halfExtents.z,
+    Math.abs(elements[2]) * halfExtents.x +
+      Math.abs(elements[6]) * halfExtents.y +
+      Math.abs(elements[10]) * halfExtents.z
+  ).multiplyScalar(2);
+}
+
 test('renders supported GLTF bounds with fixed Rapier colliders', async () => {
   vi.resetModules();
   const fixture = createGltfFixture({
@@ -59,6 +78,8 @@ test('renders supported GLTF bounds with fixed Rapier colliders', async () => {
   expect(staticCubes).toHaveLength(2);
   expect(staticCylinder.instance.name).toBe('static-cylinder');
   expect(renderer.findAllByName('static-cylinder')).toHaveLength(1);
+  expect(renderer.findAllByName('UnsupportedSurface')).toHaveLength(0);
+  expect(renderer.findAllByName('CubeGroup')).toHaveLength(0);
   expect(rapierMocks.bodies).toHaveLength(3);
   expect(rapierMocks.colliders).toHaveLength(3);
   expect(rapierMocks.bodies.every((body) => body.state.bodyType === 'fixed')).toBe(
@@ -125,9 +146,35 @@ test('renders supported GLTF bounds with fixed Rapier colliders', async () => {
     restitution: HARD_SURFACE_RESTITUTION,
   });
 
+  rotatedCubeBody?.updateMatrixWorld(true);
+  const visualWorldSize = new THREE.Box3()
+    .setFromObject(rotatedCube)
+    .getSize(new THREE.Vector3());
+  const colliderWorldSize = getOrientedBoxWorldDimensions(
+    new THREE.Vector3(...rotatedArgs),
+    rotatedCubeBody?.rotation ?? new THREE.Euler()
+  );
+  expect(colliderWorldSize.x).toBeCloseTo(visualWorldSize.x);
+  expect(colliderWorldSize.y).toBeCloseTo(visualWorldSize.y);
+  expect(colliderWorldSize.z).toBeCloseTo(visualWorldSize.z);
+
   const cylinderMesh = staticCylinder.instance as THREE.Mesh;
   const cylinderBody = cylinderMesh.parent;
+  const cylinderMetadata = cylinderBody?.userData.rapier as {
+    props: {
+      colliders: false;
+      position: [number, number, number];
+      type: string;
+    };
+  };
+
+  expect(cylinderMetadata.props).toMatchObject({
+    colliders: false,
+    position: [5, 3, -2],
+    type: 'fixed',
+  });
   expect(cylinderBody?.position.toArray()).toEqual([5, 3, -2]);
+  expect(cylinderBody?.rotation.toArray()).toEqual([0, 0, 0, 'XYZ']);
   expect(cylinderMesh.scale.toArray()).toEqual([1.5, 0.5, 1.5]);
   expect(rapierMocks.colliders[2].kind).toBe('Cylinder');
   expect(rapierMocks.colliders[2].props).toMatchObject({

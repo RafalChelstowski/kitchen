@@ -14,6 +14,11 @@ type PositionTuple = [number, number, number];
 const HARD_SURFACE_FRICTION = 0.85;
 const HARD_SURFACE_RESTITUTION = 0.05;
 
+/**
+ * Cuboid collider dimensions are expressed in the rigid body's local frame.
+ * The mesh rotation is applied to the body below, so using its world AABB here
+ * would bake the rotation into the dimensions and apply it a second time.
+ */
 function getLocalDimensions(mesh: THREE.Mesh): PositionTuple {
   mesh.geometry.computeBoundingBox();
   const dimensions = mesh.geometry.boundingBox?.getSize(new THREE.Vector3());
@@ -26,6 +31,16 @@ function getLocalDimensions(mesh: THREE.Mesh): PositionTuple {
     dimensions.x * Math.abs(mesh.scale.x),
     dimensions.y * Math.abs(mesh.scale.y),
     dimensions.z * Math.abs(mesh.scale.z),
+  ];
+}
+
+function getWorldDimensions(mesh: THREE.Mesh): PositionTuple {
+  const box = tBox.setFromObject(mesh);
+
+  return [
+    box.max.x - box.min.x,
+    box.max.y - box.min.y,
+    box.max.z - box.min.z,
   ];
 }
 
@@ -60,9 +75,9 @@ function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
 }
 
 function CylinderBoundary({ mesh }: { mesh: THREE.Mesh }) {
-  const box = tBox.setFromObject(mesh);
-  const radius = (box.max.x - box.min.x) / 2;
-  const height = box.max.y - box.min.y;
+  const dimensions = getWorldDimensions(mesh);
+  const radius = dimensions[0] / 2;
+  const height = dimensions[1];
   const { position, geometry, scale } = mesh;
 
   return (
