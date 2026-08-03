@@ -14,14 +14,24 @@ type PositionTuple = [number, number, number];
 const HARD_SURFACE_FRICTION = 0.85;
 const HARD_SURFACE_RESTITUTION = 0.05;
 
+function getLocalDimensions(mesh: THREE.Mesh): PositionTuple {
+  mesh.geometry.computeBoundingBox();
+  const dimensions = mesh.geometry.boundingBox?.getSize(new THREE.Vector3());
+
+  if (!dimensions) {
+    return [0, 0, 0];
+  }
+
+  return [
+    dimensions.x * Math.abs(mesh.scale.x),
+    dimensions.y * Math.abs(mesh.scale.y),
+    dimensions.z * Math.abs(mesh.scale.z),
+  ];
+}
+
 function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
   const { position, geometry, scale, rotation } = mesh;
-  const box = tBox.setFromObject(mesh);
-  const dimensions: PositionTuple = [
-    rotation.y === 0 ? box.max.x - box.min.x : (box.max.x - box.min.x) / 2,
-    box.max.y - box.min.y,
-    box.max.z - box.min.z,
-  ];
+  const dimensions = getLocalDimensions(mesh);
 
   return (
     <RigidBody
@@ -43,7 +53,7 @@ function CubeBoundary({ mesh }: { mesh: THREE.Mesh }) {
         name="static-cube"
         geometry={geometry}
         material={material}
-        scale={scale}
+        scale={[scale.x, scale.y, scale.z]}
       />
     </RigidBody>
   );
@@ -70,7 +80,7 @@ function CylinderBoundary({ mesh }: { mesh: THREE.Mesh }) {
         name="static-cylinder"
         geometry={geometry}
         material={material}
-        scale={scale}
+        scale={[scale.x, scale.y, scale.z]}
       />
     </RigidBody>
   );
