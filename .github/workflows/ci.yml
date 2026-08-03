@@ -2,6 +2,14 @@ name: Quality
 
 on:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
@@ -18,8 +26,12 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Verify pnpm version
-        run: test "$(corepack pnpm --version)" = "11.1.2"
+      - name: Configure pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
@@ -27,11 +39,11 @@ jobs:
       - name: Lint
         run: corepack pnpm run lint
 
-      - name: Typecheck
+      - name: TypeScript typecheck
         run: corepack pnpm run typecheck
 
-      - name: Test
+      - name: Vitest
         run: corepack pnpm run test
 
-      - name: Build
+      - name: Production build
         run: corepack pnpm run build
