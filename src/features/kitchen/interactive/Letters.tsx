@@ -90,7 +90,6 @@ function Letter({
     to: async (next) => {
       if (animated) {
         for (let index = 0; index < animPos.length; index += 1) {
-          // eslint-disable-next-line no-await-in-loop
           await next({ position: animPos[index] });
         }
         setAnimated(false);

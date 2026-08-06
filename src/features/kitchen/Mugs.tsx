@@ -40,6 +40,15 @@ const bodyEuler = new THREE.Euler();
 const bodyRotation = new THREE.Quaternion();
 const bodyPosition = new THREE.Vector3();
 
+function isMugIndex(value: unknown, mugsNumber: number): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value < mugsNumber
+  );
+}
+
 function syncMugBodyToTransform(
   body: RapierRigidBody,
   position: THREE.Vector3,
@@ -107,11 +116,14 @@ export function Mugs({
 
       if (x[0].distance < 2) {
         const mugIndex = x[0].object.userData.mugIndex;
+        const body = isMugIndex(mugIndex, mugs.length)
+          ? bodiesRef.current[mugIndex]
+          : undefined;
 
-        if (typeof mugIndex === 'number') {
+        if (body) {
           instanceId.current = mugIndex;
           setHeldMugIndex(mugIndex);
-          bodiesRef.current[mugIndex]?.setEnabled(false);
+          body.setEnabled(false);
           setState({ playerStatus: PlayerStatus.PICKED });
         }
       }
@@ -169,7 +181,7 @@ export function Mugs({
 
         if (targetMesh) {
           const distance = position.distanceTo(targetMesh.point);
-          camera.getWorldDirection(target);
+          camera.getWorldDirection(target).normalize();
           const { x, y, z } = target.multiplyScalar(Math.min(distance * 2, 10));
 
           const selectedMugIndex = instanceId.current;
@@ -189,16 +201,14 @@ export function Mugs({
             );
             body.setLinvel({ x, y, z }, true);
             body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-            body.setRotation(
-              bodyRotation.setFromEuler(
-                bodyEuler.set(
-                  Math.random() * 3,
-                  Math.random() * 3,
-                  Math.random() * 3
-                )
-              ),
-              true
+            const throwRotation = new THREE.Quaternion().setFromEuler(
+              new THREE.Euler(
+                Math.random() * 3,
+                Math.random() * 3,
+                Math.random() * 3
+              )
             );
+            body.setRotation(throwRotation, true);
           }
 
           instanceId.current = undefined;

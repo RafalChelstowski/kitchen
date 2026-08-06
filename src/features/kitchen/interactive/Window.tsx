@@ -84,7 +84,7 @@ export function InteractiveWindow(): JSX.Element {
             dimensions[2] / 2,
           ]}
         />
-        <mesh geometry={geometry} scale={scale}>
+        <mesh geometry={geometry} scale={[scale.x, scale.y, scale.z]}>
           <meshBasicMaterial visible={false} />
         </mesh>
       </RigidBody>

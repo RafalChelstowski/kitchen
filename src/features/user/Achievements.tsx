@@ -36,8 +36,12 @@ export function PlayerAchievements({
         const isNew = status === AchievementPayloadStatus.NEW;
 
         return (
-          // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events
           <div
+            onFocus={() => {
+              if (isNew) {
+                markAchievementViewed(name);
+              }
+            }}
             onMouseOver={() => {
               if (isNew) {
                 markAchievementViewed(name);
